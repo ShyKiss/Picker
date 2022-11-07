@@ -50,8 +50,6 @@
 * ### `F9` — Hide Hud
 * ### `G` - Toggle Ghost
 * ### `L` - Toggle follow point light
-* ### `Shift + T` — Toggle Timer
-* ### `Shift + Z` — Reset Timer 
 
 ## In menu:
 
