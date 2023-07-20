@@ -1,12 +1,57 @@
+
+=================PICKER HUD=================
+
+ToggleShowVolumes
+ToggleWernicke
+ToggleNFS
+ToggleClickButton
+TogglePauseMenu
+ToggleTeleportButton
+TogglePickerDebug
+ToggleTimersStop
+ToggleTimersTime(Float Time=0.3)
+ToggleAllActorInfo
+TogglePickerMessages
+ToggleMenuMusic
+ToggleForceFuncs
+ToggleSpawnEnemyCount(Int Count=1)
+ToggleButtonDescs
+ToggleWeaponForEnemy(String WeaponToUse)
+ToggleEnemyShouldAttack
+TogglePossessSpawnHero
+TogglePossessAfterKill
+ToggleChangeDoorSndMat(Name SndMat)
+PushMessage(String Msg)
+SetMenu(Menu Menu, optional String ButtonTag)
+ChangeColorTheme(Name Element, Name Channel, Bool Increase)
+Back
+HideDebugMenu
+
+=================PICKER CONTROLLER=================
+
+ToggleScalePlayerVel
+PP(String Name, Name Bone)
+sds
+ToggleThirdPerson(Bool Disable=false)
+ThirdPersonTimer
+door(float X, float Y, float Z)
+ps
+tt
+ToggleEightMarch
+EightMarch(Bool Disable=false)
+ToggleFestival
+Flashlights(Bool Disable=false)
+Festival(Bool Disable=false)
+DumpT3D
 CopyDiscordAbout
-SpawnRandEnemy(Int Count=1, EWeapon WeaponToUse=Weapon_None, Bool ShouldAttack=true)
-ShowVolumes(Bool Show, Bool ForTrigger=false)
+ShowVolumes(Bool Show=true, Bool ForTrigger=false)
 ToggleCinematicMode
 PlayEnemyAnim(String EnemyType, Name Anim)
 StopEnemyAnim
+OL2
 Wernicke(Bool ToggleWer=true)
 NFS(Bool ToggleNFS=true)
-KillerMake(String CMaterial)
+KillerMake(String CMaterial) // Replaces Every Material of Every StaticMesh (Fun)
 SkipTorture
 SkipStart
 TimerFrom(Float TimerFromTime, coerce String Command)
@@ -15,8 +60,8 @@ StopCurrentMovie
 SpawnHero(Bool Possessed=false)
 KillHeroes(Bool AfterPossess=true)
 String GetHeroList
-PossessHero(Name HeroName)
-SetTargetHero(Name HeroName)
+PossessHero(Int HeroIndex)
+SetTargetHero(Int HeroIndex)
 SpawnProp(StaticMesh Meshh, optional Int MatIndex, optional MaterialInstanceConstant Material)
 ChangeProp(PickerProp Prop, optional StaticMesh Mesh, optional Int MatIndex, optional MaterialInstanceConstant Material)
 DeleteProp(PickerProp Prop)
@@ -29,6 +74,7 @@ ToggleTimer
 ResetTimer
 TeleportEnemyToPlayer(Bool ToPlayer=false)
 Checkpoint(String Checkpoint, Bool Save=AlwaysSaveCheckpoint)
+prs(String CP)
 FinishGame(String Game="Both")
 DmgSelf(Float Damage)
 ChangePlayerHealth(Int NewHealth, Int HealthMax=100)
@@ -79,7 +125,12 @@ EnemyAnimRate(Float Rate=1)
 ToggleKillEnemy(Bool Force=PickerHud(HUD).bForceFuncs)
 KillEnemy
 ChangeBatteries(Int Increase=1)
+ToggleFixedcam
 ToggleFreecam
+FreecamSpeed(Float Speed=0.0040)
+FreecamFOV(Float FOV){
+ToggleGrain
+Execute(Name Command='Prikol')
 ToggleAIDebug
 Reload
 PlayAkEvent(AkEvent Event)
@@ -92,6 +143,7 @@ CPList
 GiveItem(String ItemName)
 BadFPS(optional Float SlowDown)
 ApplyCP(String Checkpoint)
+DebugPause
 SaveGame(String FileName)
 Summon(String ClassName)
 SetLevelStreamingStatus(Name PackageName, Bool bShouldBeLoaded, Bool bShouldBeVisible)
@@ -113,12 +165,14 @@ SaveAllSaves
 DebugGameplay
 CVect(String MainCommand, Float X=0, Float Y=0, Float Z=0)
 TriggerDoor(DoorEventType Event)
+FunBash(Bool bReversed=false)
 BashDoor(Bool bReversed)
 BreakDoor(Bool bReversed)
 ChangeEnemyModel(String Model, Bool ForChrisType=false)
 ChangeGenericEnemyMesh(String Model)
 ChangeSoldierEnemyMesh(String Model)
 SpawnEnemy(String CEnemy, Int Count=1, EWeapon WeaponToUse=Weapon_None, Bool ShouldAttack=true)
+SpawnRandEnemy(Int Count=1, EWeapon WeaponToUse=Weapon_None, Bool ShouldAttack=true)
 RotateEnemy(Float Pitch=0, Float Yaw=0, Float Roll=0)
 ChangeChrisModel(String Model, Bool ForGroom=false)
 SpawnDoor(EOLDoorMeshType MeshType)
@@ -144,7 +198,7 @@ SS
 ST
 CBatt(Int Increase)
 CHealth(Int NewHealth)
-Van(Bool Force=true)
+Van(Bool Force=true) //NOT DUNGEON MASTER!!
 InfBatt
 CPM(String PlayerModel)
 HideObj
@@ -177,29 +231,8 @@ RandChangeDoorMeshType
 RandPlayerSpeed
 KAActor
 ToggleKAActor(Float Speed=0.3, Bool Stop=false)
-CallRE(Name EventName)
+CallRE( name EventName )
 ListRE
 PossessPickerBot
 CantHideFromUs(Bool Stop=false)
-ToggleClickButton
-TogglePauseMenu
-ToggleTeleportButton
-TogglePickerDebug
-ToggleTimerDebug
-ToggleTimersStop
-ToggleTimersTime(Float Time=0.3)
-ToggleAllActorInfo
-TogglePickerMessages
-ToggleMenuMusic
-ToggleForceFuncs
-ToggleSpawnEnemyCount(Int Count=1)
-ToggleButtonDescs
-ToggleWeaponForEnemy(String WeaponToUse)
-ToggleEnemyShouldAttack
-TogglePossessSpawnHero
-TogglePossessAfterKill
-ToggleChangeDoorSndMat(Name SndMat)
-PushMessage(String Msg)
-SetMenu(Menu Menu, optional String ButtonTag)
-Back
-HideDebugMenu
+ppp
