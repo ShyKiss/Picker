@@ -57,7 +57,6 @@
 * ### `Mouse Wheel Down` — Freecam Speed Down
 * ### `Mouse Wheel Click` — Default Freecam Speed (0.0040)
 
-
 ## In menu:
 
 * ### `LMB` — Click
