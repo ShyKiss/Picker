@@ -1,9 +1,10 @@
 Class PickerController extends OLPlayerController
     Config(Picker);
 
-var Float InsanePlusStamina, fPlayerAnimRate, fEnemyAnimRate;
+var Float InsanePlusStamina, fPlayerAnimRate, fEnemyAnimRate, fDebugSpeed;
 var String CustomPM, CustomSEnemySkelMesh, CustomGEnemySkelMesh, CommandTimerFrom;
 var Vector vScalePlayer, vScaleEnemies, TeleportPosCoordsTemp;
+var Vector2D ViewportCurrentSize;
 var PickerHud PickerHud;
 var PickerInput PickerInput;
 var SoundCue TeleportSound, ButtonSound, MenuMusic;
@@ -12,18 +13,529 @@ var Transient OLCheatManager CheatManager;
 var Class<OLCheatManager> CheatClass;
 var Array<Materialinterface> Materials;
 var SkeletalMeshActorSpawnable NFSCar, WernickeModelPlayer;
+var Array<AutoCompleteCommand> ACList, ManualAutoCompleteList;
 var AudioComponent MenuMusicComponent;
 var PickerPointLight PickerFollowLight;
 var Array<String> ArrayPatientTypes, ArrayPatientModel;
 var Private String CurrentAddCPGame;
 var Int MathTasksGlobalA, MathTasksGlobalB, MathTasksTempOperation;
-var Bool AIDebug, bDebugFullyGhost, DoorLockState, DoorTypeState, DoorDelState, FreecamState, LightState, ChrisState, BoolKillEnemy, ForceKillEnemy,
+var Bool AIDebug, bScalePlayerVel, bGrainDisabled, bDebugFullyGhost, bThirdPersonMode, bEightMarch, bFestival, DoorLockState, DoorTypeState, DoorDelState, FreecamState, LightState, ChrisState, BoolKillEnemy, ForceKillEnemy,
 bDefaultPlayer, ForceDisAI, EverytimeLightState, bBhop, bAutoBunnyHop, bFlyMode, bResetTimer, bTimer, bDisAI, bAnimFree, bLMFree, bSMFree, bDark, GroomChrisState,
 SMRandomState, AllLoadedState, InsanePlusState, RandomizerState, LSMDamage, ResetJumpStam, RandomizerFR, MathTasksState, MathTasksTimer, bFollowLight, CrabGameState;
 var Float SmallRandomTime, MediumRandomTime, LargeRandomTime;
 var Config Bool DisCamMode, TrainingMode, AlwaysSaveCheckpoint, RandomizerChallengeMode;
 
 /************************************************FUNCTIONS************************************************/
+
+Exec Function ToggleScalePlayerVel() {
+    bScalePlayerVel = !bScalePlayerVel;
+    if(bScalePlayerVel) {
+        WorldInfo.Game.SetTimer(0.001, true, 'ScalePlayerVelTimer', Self);
+    }
+    else {
+        WorldInfo.Game.ClearTimer( 'ScalePlayerVelTimer', Self);
+    }
+}
+
+Function ScalePlayerVelTimer() {
+    if(VSize(PickerHero(Pawn).Velocity) <= 50) {
+        ScalePlayer(0.5,0.5,0.5);
+    }
+    else if(VSize(PickerHero(Pawn).Velocity) > 50 && VSize(PickerHero(Pawn).Velocity) <= 100) {
+        ScalePlayer(ScalebyVel(0.5),ScalebyVel(0.5),ScalebyVel(0.5));
+    }
+    else {
+        ScalePlayer(ScalebyVel(1),ScalebyVel(1),ScalebyVel(1));
+    }
+}
+
+Exec Function PP(String Name, Name Bone) {
+    local EmitterPool Pool;
+    local ParticleSystemComponent Component;
+    local Vector C;
+    local Rotator Rot;
+
+    GetPlayerViewpoint(C, Rot);
+
+    Pool = Spawn(Class'EmitterPool', Self, 'PppickerPool', C, Rot);
+    //PickerHero(Pawn).Mesh.AttachComponent(Pool, Bone);
+    Component = Pool.SpawnEmitterMeshAttachment(ParticleSystem(DynamicLoadObject(Name, Class'ParticleSystem')), PickerHero(Pawn).Mesh, Bone, true);
+    Component.SetKillOnCompleted(0, true);
+}
+
+Exec Function sds() {
+    ConsoleCommand("ToggleFixedcam");
+    ConsoleCommand("TimerFrom 0.001 ThirdPersonTimer");
+}
+
+Exec Function ToggleThirdPerson(Bool Disable=false) {
+    local Rotator Rot;
+    local PickerInput Input;
+    local Int Index, Index2;
+
+    Input = PickerInput(PlayerInput);
+    if(!bDebugFullyGhost && !bDebugFreeCam && !bDebugGhost && !bDebugFixedCam) {
+        ToggleFixedcam();
+    }
+    if(Disable) {
+        if(bDebugFixedCam) {
+            ToggleFixedcam();
+        }
+        bThirdPersonMode = false;
+        WorldInfo.Game.ClearTimer('ThirdPersonTimer', Self);
+        DebugCamPos = PickerHero(Pawn).Camera.BaseLocation;
+        PickerHero(Pawn).HeadMesh.SetHidden(true);
+        bIgnoreLookInput = 0;
+        IgnoreLookInput(false);
+        ClientIgnoreLookInput(false);
+        bCinematicMode = false;
+        PickerHero(Pawn).CameraMesh.SetHidden(true); 
+        PickerHero(Pawn).CamParams.MaxPitchCS = PickerHero(Pawn).Default.CamParams.MaxPitchCS;
+        PickerHero(Pawn).CamParams.MinPitchCS = PickerHero(Pawn).Default.CamParams.MinPitchCS;
+        PickerHero(Pawn).CamParams.MaxPitchWS = PickerHero(Pawn).Default.CamParams.MaxPitchWS;
+        PickerHero(Pawn).CamParams.MinPitchWS = PickerHero(Pawn).Default.CamParams.MinPitchWS;
+        PickerHero(Pawn).CamParams.MaxYaw = PickerHero(Pawn).Default.CamParams.MaxYaw;
+        PickerHero(Pawn).CamParams.MinYaw = PickerHero(Pawn).Default.CamParams.MinYaw;
+        While(Index <= 15) {
+            if(Index == 9) {
+                PickerHero(Pawn).LocomotionModeParams[Index].GP.CameraMode = PickerHero(Pawn).Default.LocomotionModeParams[Index].GP.CameraMode;
+            }
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MinYaw = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MinYaw;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MaxYaw = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MaxYaw;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MinPitchCS = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MinPitchCS;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MaxPitchCS = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MaxPitchCS;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MinPitchWS = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MinPitchWS;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MaxPitchWS = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MaxPitchWS;
+            ++Index;
+        }
+        While(Index2 <= 70) {
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MinYaw = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MinYaw;
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MaxYaw = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MaxYaw;
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MinPitchCS = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MinPitchCS;
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MaxPitchCS = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MaxPitchCS;
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MinPitchWS = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MinPitchWS;
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MaxPitchWS = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MaxPitchWS;
+            ++Index2;
+        }
+        Reload();
+    }
+    else {
+        bThirdPersonMode = true;
+        WorldInfo.Game.SetTimer(0.001, true, 'ThirdPersonTimer', Self);
+    }
+}
+
+Exec Function ThirdPersonTimer() {
+    local Vector HitLoc, HitNorm;
+    local Rotator Rot;
+    local PickerInput Input;
+    local Int Index, Index2;
+
+    Input = PickerInput(PlayerInput);
+    if(bDebugFullyGhost || bDebugGhost || bDebugFreeCam) return;
+    if(PickerHero(Pawn).Physics == PHYS_Custom) {
+        DebugCamRot.Yaw = Self.Rotation.Yaw;
+        DebugCamRot.Pitch = Self.Rotation.Pitch;
+        DebugCamRot.Roll = Self.Rotation.Roll;
+    }
+    else {
+        DebugCamRot.Yaw = PickerHero(Pawn).Camera.BaseRotation.Yaw;
+        DebugCamRot.Pitch = Self.Rotation.Pitch;
+        DebugCamRot.Roll = Self.Rotation.Roll;
+    }
+    if(Input.Outer.bDuck == 1 && PickerHero(Pawn).Physics == PHYS_Walking && !PickerHero(Pawn).bLimping || PickerHero(Pawn).bWasUnder || PickerHero(Pawn).Health <= 0 || PickerHero(Pawn).LocomotionMode == LM_Bed || PickerHero(Pawn).LocomotionMode == LM_Locker) {
+        DebugCamPos = PickerHero(Pawn).Camera.BaseLocation;
+        PickerHero(Pawn).HeadMesh.SetHidden(true);
+        if(PickerHero(Pawn).CamcorderState == CCS_Active && PickerHero(Pawn).LocomotionMode != LM_Cinematic || PickerHero(Pawn).CamcorderState == CCS_Inactive && PickerHero(Pawn).LocomotionMode != LM_Cinematic || PickerHero(Pawn).LocomotionMode == LM_Cinematic && PickerHero(Pawn).CamcorderState != CCS_Active) {
+            bCinematicMode = false;
+            PickerHero(Pawn).CameraMesh.SetHidden(true); 
+        }
+        else {
+            bCinematicMode = true;
+            PickerHero(Pawn).CameraMesh.SetHidden(false);
+        }
+    }
+    else {
+        if(PickerHero(Pawn).CamcorderState == CCS_Inactive && PickerHero(Pawn).LocomotionMode != LM_Cinematic || PickerHero(Pawn).LocomotionMode == LM_Cinematic && PickerHero(Pawn).CamcorderState != CCS_Active) {
+            bCinematicMode = false;
+            PickerHero(Pawn).CameraMesh.SetHidden(true);
+        }
+        else {
+            bCinematicMode = true;
+            PickerHero(Pawn).CameraMesh.SetHidden(false);
+        }
+        //Trace(HitLoc, HitNorm, PickerHero(Pawn).Camera.BaseLocation - (Normal(Vector(DebugCamRot)) * 9999),, true, vect(12,12,12));
+        //DebugCamPos = PickerHero(Pawn).Camera.BaseLocation - ClampLength(HitLoc, 135);
+        DebugCamPos = PickerHero(Pawn).Camera.BaseLocation - (Normal(Vector(DebugCamRot)) * 135);
+        PickerHero(Pawn).HeadMesh.SetHidden(false);
+    }
+
+    //Rot.Pitch = DebugCamRot.Pitch + 90 * 182.044449;
+    Rot.Pitch =  90 * 182.044449;
+    Rot.Yaw= -1 * (DebugCamRot.Roll + 180 * 182.044449);
+    Rot.Roll = -1 * Clamp(DebugCamRot.Pitch, 3226, 9500);
+
+    if(PickerHero(Pawn).Health > 0) {
+        While(Index <= 15) {
+            if(Index == 9) {
+                PickerHero(Pawn).LocomotionModeParams[Index].GP.CameraMode = CRM_Limited;
+            }
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MinYaw = -MaxInt;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MaxYaw = MaxInt;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MinPitchCS = -90;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MaxPitchCS = 90;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MinPitchWS = -90;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MaxPitchWS = 90;
+            ++Index;
+        }
+        While(Index2 <= 70) {
+            PickerHero(Pawn).SpecialMoveParams[Index2].GP.MinYaw = -MaxInt;
+            PickerHero(Pawn).SpecialMoveParams[Index2].GP.MaxYaw = MaxInt;
+            PickerHero(Pawn).SpecialMoveParams[Index2].GP.MinPitchCS = -90;
+            PickerHero(Pawn).SpecialMoveParams[Index2].GP.MaxPitchCS = 90;
+            PickerHero(Pawn).SpecialMoveParams[Index2].GP.MinPitchWS = -90;
+            PickerHero(Pawn).SpecialMoveParams[Index2].GP.MaxPitchWS = 90;
+            ++Index2;
+        }
+    }
+    else {
+        While(Index <= 15) {
+            if(Index == 9) {
+                PickerHero(Pawn).LocomotionModeParams[Index].GP.CameraMode = PickerHero(Pawn).Default.LocomotionModeParams[Index].GP.CameraMode;
+            }
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MinYaw = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MinYaw;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MaxYaw = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MaxYaw;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MinPitchCS = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MinPitchCS;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MaxPitchCS = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MaxPitchCS;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MinPitchWS = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MinPitchWS;
+            PickerHero(Pawn).LocomotionModeParams[Index].GP.MaxPitchWS = PickerHero(Pawn).Default.SpecialMoveParams[Index].GP.MaxPitchWS;
+            ++Index;
+        }
+        While(Index2 <= 70) {
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MinYaw = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MinYaw;
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MaxYaw = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MaxYaw;
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MinPitchCS = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MinPitchCS;
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MaxPitchCS = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MaxPitchCS;
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MinPitchWS = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MinPitchWS;
+            PickerHero(Pawn).SpecialMoveParams[Index].GP.MaxPitchWS = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MaxPitchWS;
+            ++Index2;
+        }
+    }
+    if(PickerHud(HUD).ToggleHUD || PickerHud(HUD).MathTasksHUD) {
+        bIgnoreLookInput = 1;
+        IgnoreLookInput(true);
+        ClientIgnoreLookInput(true);
+    }
+    else {
+        bIgnoreLookInput = 0;
+        IgnoreLookInput(false);
+        ClientIgnoreLookInput(false);
+
+    }
+
+    PickerHero(Pawn).CamParams.MaxPitchCS = 90;
+    PickerHero(Pawn).CamParams.MinPitchCS = -90;
+    PickerHero(Pawn).CamParams.MaxPitchWS = 90;
+    PickerHero(Pawn).CamParams.MinPitchWS = -90;
+    PickerHero(Pawn).CamParams.MaxYaw = MaxInt;
+    PickerHero(Pawn).CamParams.MinYaw = -MaxInt;
+
+    PickerHero(Pawn).Mesh.AttachComponent(PickerHero(Pawn).HeadMesh, 'Hero-Head');
+    if(PickerHero(Pawn).LocomotionMode == LM_Walk || PickerHero(Pawn).LocomotionMode == LM_Fall) {
+        PickerHero(Pawn).HeadMesh.SetRotation(Rot);
+    }
+}
+
+Exec Function door(float X, float Y, float Z) {
+    local OLDoor Door;
+    local Vector C;
+
+    C.X = X;
+    C.Y = Y;
+    C.Z = Z;
+
+    Foreach AllActors(Class'OLDoor', Door) {
+        Door.Mesh.SetScale3D(C);
+    }
+}
+
+Exec Function ps() {
+     local StaticMeshCollectionActor A;
+     local StaticMeshComponent Component;
+
+     Foreach AllActors(Class'StaticMeshCollectionActor', A) {
+        Foreach A.ComponentList(Class'StaticMeshComponent', Component) {
+            PickerHero(Pawn).AttachComponent(Component);
+        }
+     }
+}
+
+Exec Function tt() {
+    local Actor A;
+    local Vector Start, End, HitLoc, HitNorm, C;
+    local Rotator Rot;
+    local ActorComponent Component;
+
+    GetPlayerViewPoint(C, Rot);
+    Foreach TraceActors(Class'Actor', A, HitLoc, HitNorm, C + (Normal(Vector(Rot)) * 1000), C) {
+        SendMsg(A.Class @ "||" @ A.Name, 1);
+        Foreach A.ComponentList(Class'ActorComponent', Component);
+            SendMsg(Component.Class @ "||" @ Component.Name, 1);
+    }
+}
+
+Exec Function ToggleEightMarch() {
+    bEightMarch = !bEightMarch;
+    if(!bEightMarch) {
+        WorldInfo.Game.ClearTimer('EightMarch', Self);
+        EightMarch(true);
+    }
+    else {
+        WorldInfo.Game.SetTimer(0.1, true, 'EightMarch', Self);
+    }
+}
+
+Exec Function EightMarch(Bool Disable=false) {
+    local OLEnemyPawn Patient, A;
+    local SkeletalMeshActorSpawnable SM;
+    local SkeletalMeshComponent Component;
+
+    Foreach AllActors(Class'OLEnemyPawn', A) {
+        Foreach A.Mesh.AttachedComponents(Class'SkeletalMeshComponent', Component) {
+            if(Component.SkeletalMesh == SkeletalMesh'flowers.flowers') {
+                A.Mesh.DetachComponent(Component);
+                if(Disable) {
+                    Patient.Weapons[8].Type = Patient.Default.Weapons[8].Type;
+                    Patient.Weapons[8].Mesh = Patient.Default.Weapons[8].Mesh;
+                    Patient.Mesh.AttachComponent(Patient.Default.WeaponMesh, Patient.WeaponAttachBone);
+                }
+            }
+        }
+    }
+
+     if(Disable) return;
+
+     Foreach AllActors(Class'OLEnemyPawn', Patient) {
+        SM = Spawn(Class'SkeletalMeshActorSpawnable',,'KillerHappy', Patient.Location, rot(0,0,0),,true);
+        SM.SkeletalMeshComponent.SetSkeletalMesh(SkeletalMesh'flowers.flowers');
+        SM.SkeletalMeshComponent.SetMaterial(0,MaterialInstanceConstant'flowers.Prikol1');
+        SM.SkeletalMeshComponent.SetMaterial(1,MaterialInstanceConstant'flowers.Prikol2');
+        SM.SkeletalMeshComponent.SetMaterial(2,MaterialInstanceConstant'flowers.Prikol');
+        SM.SkeletalMeshComponent.SetMaterial(3,MaterialInstanceConstant'flowers.Prikol');
+        SM.SetCollision(false,false);
+        SM.SetHidden(false);
+        Patient.Weapons[8].Type = WeaponType_Blunt;
+        Patient.Weapons[8].Mesh = None;
+        Patient.Modifiers.WeaponToUse = 8;
+        Patient.Modifiers.WeaponMeshToUse = None;
+        Patient.Mesh.DetachComponent(Patient.WeaponMesh);
+        Patient.Mesh. AttachComponent(SM.SkeletalMeshComponent, Patient.WeaponAttachBone);
+    }
+}
+
+Exec Function ToggleFestival() {
+    bFestival = !bFestival;
+    if(!bFestival) {
+        WorldInfo.Game.ClearTimer('Festival', Self);
+        Festival(true);
+    }
+    else {
+        WorldInfo.Game.SetTimer(0.1, true, 'Festival', Self);
+    }
+}
+
+Exec Function Flashlights(Bool Disable=false) {
+    local OLEnemyPawn Patient, A;
+    local SkeletalMeshActorSpawnable SM1, SM2, SM3, SM4, SM5, SM6, SM7;
+    local SkeletalMeshComponent Component;
+    local ActorComponent CCC;
+    local OLFlashLight OLFlashLight;
+
+    Foreach AllActors(Class'OLEnemyPawn', A) {
+        Foreach A.Mesh.AttachedComponents(Class'SkeletalMeshComponent', Component) {
+            if(Component.SkeletalMesh == SkeletalMesh'flowers.flowers') {
+                A.Mesh.DetachComponent(Component);
+                if(Disable) {
+                    Patient.Weapons[8].Type = Patient.Default.Weapons[8].Type;
+                    Patient.Weapons[8].Mesh = Patient.Default.Weapons[8].Mesh;
+                    Patient.Mesh.AttachComponent(Patient.Default.WeaponMesh, Patient.WeaponAttachBone);
+                }
+            }
+        }
+    }
+
+     if(Disable) return;
+
+     Foreach AllActors(Class'OLEnemyPawn', Patient) {
+        SM1 = Spawn(Class'SkeletalMeshActorSpawnable',,'KillerHappy', Patient.Location, rot(0,0,0),,true);
+        SM2 = Spawn(Class'SkeletalMeshActorSpawnable',,'KillerHappy', Patient.Location, rot(0,0,0),,true);
+        SM3 = Spawn(Class'SkeletalMeshActorSpawnable',,'KillerHappy', Patient.Location, rot(0,0,0),,true);
+        SM4 = Spawn(Class'SkeletalMeshActorSpawnable',,'KillerHappy', Patient.Location, rot(0,0,0),,true);
+        SM5 = Spawn(Class'SkeletalMeshActorSpawnable',,'KillerHappy', Patient.Location, rot(0,0,0),,true);
+        SM6 = Spawn(Class'SkeletalMeshActorSpawnable',,'KillerHappy', Patient.Location, rot(0,0,0),,true);
+        SM7 = Spawn(Class'SkeletalMeshActorSpawnable',,'KillerHappy', Patient.Location, rot(0,0,0),,true);
+        OLFlashLight = Spawn(Class'OLFlashLight',,'PickerFlashLight',Patient.Location, rot(0,0,0),,true);
+        SM1.SkeletalMeshComponent.SetSkeletalMesh(SkeletalMesh'OLFlashLight.FlashLightMesh');
+        SM2.SkeletalMeshComponent.SetSkeletalMesh(SkeletalMesh'OLFlashLight.ConeMesh1a');
+        SM3.SkeletalMeshComponent.SetSkeletalMesh(SkeletalMesh'OLFlashLight.ConeMesh1b');
+        SM4.SkeletalMeshComponent.SetSkeletalMesh(SkeletalMesh'OLFlashLight.ConeMesh2a');
+        SM5.SkeletalMeshComponent.SetSkeletalMesh(SkeletalMesh'OLFlashLight.ConeMesh2b');
+        SM6.SkeletalMeshComponent.SetSkeletalMesh(SkeletalMesh'OLFlashLight.LensFlareMesh');
+        SM7.SkeletalMeshComponent.SetSkeletalMesh(SkeletalMesh'OLFlashLight.LightSpotLight');
+        SM1.SetCollision(false,false);
+        SM1.SetHidden(false);
+        SM2.SetCollision(false,false);
+        SM2.SetHidden(false);
+        SM3.SetCollision(false,false);
+        SM3.SetHidden(false);
+        SM4.SetCollision(false,false);
+        SM4.SetHidden(false);
+        SM5.SetCollision(false,false);
+        SM5.SetHidden(false);
+        SM6.SetCollision(false,false);
+        SM6.SetHidden(false);
+        SM7.SetCollision(false,false);
+        SM7.SetHidden(false);
+        Patient.Weapons[8].Type = WeaponType_Blunt;
+        Patient.Weapons[8].Mesh = None;
+        Patient.Modifiers.WeaponToUse = 8;
+        Patient.Modifiers.WeaponMeshToUse = None;
+        Patient.Mesh.DetachComponent(Patient.WeaponMesh);
+        Patient.Mesh. AttachComponent(SM1.SkeletalMeshComponent, Patient.WeaponAttachBone);
+        Patient.Mesh. AttachComponent(SM2.SkeletalMeshComponent, Patient.WeaponAttachBone);
+        Patient.Mesh. AttachComponent(SM3.SkeletalMeshComponent, Patient.WeaponAttachBone);
+        Patient.Mesh. AttachComponent(SM4.SkeletalMeshComponent, Patient.WeaponAttachBone);
+        Patient.Mesh. AttachComponent(SM5.SkeletalMeshComponent, Patient.WeaponAttachBone);
+        Patient.Mesh. AttachComponent(SM6.SkeletalMeshComponent, Patient.WeaponAttachBone);
+        Patient.Mesh. AttachComponent(SM7.SkeletalMeshComponent, Patient.WeaponAttachBone);
+        Foreach Patient.Mesh.AttachedComponents(Class'ActorComponent', CCC) {
+            `log(CCC.Name);
+        }
+    }
+}
+
+Exec Function Festival(Bool Disable=false) {
+    local OLEnemyGenericPatient Patient;
+    local OLEnemySoldier Soldier;
+    local OLEnemyNanoCloud NanoCloud;
+    local DynamicSMActor_Spawnable SM;
+    local OLEnemyPawn Enemy;
+    local Actor A;
+    local StaticMeshComponent Component;
+    local SkeletalMeshComponent MeshComp;
+    local Rotator Rot;
+
+    Rot.Roll = 0;
+    Rot.Yaw = 0;
+    Rot.Pitch = -90 * 182.044449;
+
+    Foreach AllActors(Class'OLEnemyPawn', Enemy) {
+        Foreach Enemy.Mesh.AttachedComponents(Class'StaticMeshComponent', Component) {
+            if(Component.StaticMesh == StaticMesh'Cone.cone') {
+                Enemy.Mesh.DetachComponent(Component);
+            }
+        }
+    }
+
+    Foreach AllActors(Class'Actor', A) {
+        if(A.Class == Class'OLEnemyPawn' || A.Class == Class'OLEnemySoldier' || A.Class == Class'OLEnemyGroom' || A.Class == Class'OLEnemyGenericPatient' || A.Class == Class'OLEnemySurgeon' || A.Class == Class'OLEnemyNanoCloud' || A.Class == Class'OLEnemyCannibal' )  break;
+        if(InStr(Caps(A.Name), Caps("SkeletalMesh")) == -1) continue;
+        Foreach A.ComponentList(Class'SkeletalMeshComponent', MeshComp) {
+            if(MeshComp == None) continue;
+            Foreach MeshComp.AttachedComponents(Class'StaticMeshComponent', Component) {
+                if(Component.StaticMesh == StaticMesh'Cone.cone') {
+                    MeshComp.DetachComponent(Component);
+                }
+            }
+        }
+    }
+
+    if(Disable) return;
+
+    Foreach AllActors(Class'Actor', A) {
+        if(A.Class == Class'OLEnemyPawn' || A.Class == Class'OLEnemySoldier' || A.Class == Class'OLEnemyGroom' || A.Class == Class'OLEnemyGenericPatient' || A.Class == Class'OLEnemySurgeon' || A.Class == Class'OLEnemyNanoCloud' || A.Class == Class'OLEnemyCannibal' )  break;
+        if(InStr(Caps(A.Name), Caps("SkeletalMesh")) == -1) continue;
+        Foreach A.ComponentList(Class'SkeletalMeshComponent', MeshComp) {
+            if(MeshComp == None) continue;
+            Foreach MeshComp.AttachedComponents(Class'StaticMeshComponent', Component) {
+                if(Component.StaticMesh == StaticMesh'Cone.cone') {
+                    MeshComp.DetachComponent(Component);
+                }
+            }
+            if(
+                InStr(Caps(MeshComp.SkeletalMesh.PathName), Caps("Patient")) != -1 ||
+                InStr(Caps(MeshComp.SkeletalMesh.PathName), Caps("Surgeon")) != -1 ||
+                InStr(Caps(MeshComp.SkeletalMesh.PathName), Caps("Priest")) != -1 ||
+                InStr(Caps(MeshComp.SkeletalMesh.PathName), Caps("Dupont")) != -1 ||
+                InStr(Caps(MeshComp.SkeletalMesh.PathName), Caps(CustomGEnemySkelMesh)) != -1
+            ) {
+                SM = Spawn(Class'DynamicSMActor_Spawnable',,'KillerHappy', vect(0,0,0), rot(0,0,0),,true);
+                SM.StaticMeshComponent.SetStaticMesh(StaticMesh'Cone.cone');
+                SM.StaticMeshComponent.SetMaterial(0,MaterialInstanceConstant'Cone.PartyHatConst');
+                SM.SetCollision(false,false);
+                SM.SetHidden(false);
+                SM.StaticMeshComponent.SetScale3D(vect(0.12,0.12,0.145));
+                MeshComp.AttachComponent(SM.StaticMeshComponent, 'NPCMedium-Head',vect(25,-1.5,0),Rot);
+            }
+             if(
+                InStr(Caps(MeshComp.SkeletalMesh.PathName), Caps("Soldier")) != -1 ||
+                InStr(Caps(MeshComp.SkeletalMesh.PathName), Caps("Groom")) != -1 ||
+                InStr(Caps(MeshComp.SkeletalMesh.PathName), Caps("NanoCloud")) != -1 ||
+                InStr(Caps(MeshComp.SkeletalMesh.PathName), Caps(CustomSEnemySkelMesh)) != -1
+            ) {
+                SM = Spawn(Class'DynamicSMActor_Spawnable',,'KillerHappy', vect(0,0,0), rot(0,0,0),,true);
+                SM.StaticMeshComponent.SetStaticMesh(StaticMesh'Cone.cone');
+                SM.StaticMeshComponent.SetMaterial(0,MaterialInstanceConstant'Cone.PartyHatConst');
+                SM.SetCollision(false,false);
+                SM.SetHidden(false);
+                SM.StaticMeshComponent.SetScale3D(vect(0.11,0.125,0.148));
+                MeshComp.AttachComponent(SM.StaticMeshComponent, 'NPCLarge-Head',vect(26.5,-3,0),Rot);
+            }
+        }
+    }
+
+    Foreach AllActors(Class'OLEnemyGenericPatient', Patient) {
+        SM = Spawn(Class'DynamicSMActor_Spawnable',,'KillerHappy', Patient.Location, rot(0,0,0),,true);
+        SM.StaticMeshComponent.SetStaticMesh(StaticMesh'Cone.cone');
+        SM.StaticMeshComponent.SetMaterial(0,MaterialInstanceConstant'Cone.PartyHatConst');
+        SM.SetCollision(false,false);
+        SM.SetHidden(false);
+        SM.StaticMeshComponent.SetScale3D(vect(0.12,0.12,0.145));
+        Patient.Mesh. AttachComponent(SM.StaticMeshComponent, 'NPCMedium-Head',vect(25,-1.5,0),Rot);
+    }
+    Foreach AllActors(Class'OLEnemySoldier', Soldier) {
+        if(Soldier.Class == Class'OLEnemyGroom') {
+            SM = Spawn(Class'DynamicSMActor_Spawnable',,'KillerHappy', Soldier.Location, rot(0,0,0),,true);
+            SM.StaticMeshComponent.SetStaticMesh(StaticMesh'Cone.cone');
+            SM.StaticMeshComponent.SetMaterial(0,MaterialInstanceConstant'Cone.PartyHatConst');
+            SM.SetCollision(false,false);
+            SM.SetHidden(false);
+            SM.StaticMeshComponent.SetScale3D(vect(0.11,0.125,0.148));
+            Soldier.Mesh. AttachComponent(SM.StaticMeshComponent, 'NPCLarge-Head',vect(26.5,-3,0),Rot);
+            break;
+        }
+        SM = Spawn(Class'DynamicSMActor_Spawnable',,'KillerHappy', Soldier.Location, rot(0,0,0),,true);
+        SM.StaticMeshComponent.SetStaticMesh(StaticMesh'Cone.cone');
+        SM.StaticMeshComponent.SetMaterial(0,MaterialInstanceConstant'Cone.PartyHatConst');
+        SM.SetCollision(false,false);
+        SM.SetHidden(false);
+        SM.StaticMeshComponent.SetScale3D(vect(0.11,0.12,0.145));
+        Soldier.Mesh. AttachComponent(SM.StaticMeshComponent, 'NPCLarge-Head',vect(26.5,-1.5,0),Rot);
+    }
+    Foreach AllActors(Class'OLEnemyNanoCloud', NanoCloud) {
+        SM = Spawn(Class'DynamicSMActor_Spawnable',,'KillerHappy', NanoCloud.Location, rot(0,0,0),,true);
+        SM.StaticMeshComponent.SetStaticMesh(StaticMesh'Cone.cone');
+        SM.StaticMeshComponent.SetMaterial(0,MaterialInstanceConstant'Cone.PartyHatConst');
+        SM.SetCollision(false,false);
+        SM.SetHidden(false);
+        SM.StaticMeshComponent.SetScale3D(vect(0.11,0.125,0.148));
+        NanoCloud.Mesh. AttachComponent(SM.StaticMeshComponent, 'NPCLarge-Head',vect(26.5,-3,0),Rot);
+    }
+}
+
+Exec Function DumpT3D() {
+    
+}
 
 Exec Function CopyDiscordAbout() {
     CopyToClipBoard(Localize("Other", "Discord", "Picker"));
@@ -186,16 +698,18 @@ Exec Function KillerMake(String CMaterial) { // Replaces Every Material of Every
     local MaterialInterface Material;
 
     Foreach AllActors(Class'Actor', A) {
-        if(InStr(Caps(A.Name), Caps("StaticMesh")) == -1 || InStr(Caps(A.Class), Caps("StaticMesh")) == -1) continue;
-        //if(InStr(Caps(A.Name), Caps("Actor")) != -1) continue;
-        //`log(A.Name);
-        Foreach A.ComponentList(Class'StaticMeshComponent', MeshComp) {
-            //if(MeshComp == None || MeshComp.StaticMesh == None) continue;
-            //if(MeshComp.Materials.Length == -1) continue;
-            while(Index < MeshComp.Materials.Length) {
-                MeshComp.SetMaterial(Index, MaterialInstanceConstant(DynamicLoadObject(CMaterial, Class'MaterialInstanceConstant')));
-                `log(MeshComp.Materials.Length);
-                Index++;
+        if(InStr(Caps(A.Name), Caps("StaticMesh")) != -1) {//continue;
+            //if(InStr(Caps(A.Name), Caps("Actor")) != -1) continue;
+           // `log(A.Name);
+            Foreach A.ComponentList(Class'StaticMeshComponent', MeshComp) {
+                Index = 0;
+                //if(MeshComp == None || MeshComp.StaticMesh == None) continue;
+                //if(MeshComp.Materials.Length == -1) continue;
+                while(Index < MeshComp.Materials.Length) {
+                    MeshComp.SetMaterial(Index, MaterialInstanceConstant(DynamicLoadObject(CMaterial, Class'MaterialInstanceConstant')));
+                    //`log(MeshComp.Materials.Length);
+                    Index++;
+                }
             }
         }
     }
@@ -282,11 +796,11 @@ Exec Function String GetHeroList() {
     return Result;
 }
 
-Exec Function PossessHero(Name HeroName) {
+Exec Function PossessHero(Int HeroIndex) {
     local PickerHero Hero;
 
     Foreach AllActors(Class'PickerHero', Hero) {
-        if(Hero.Name == HeroName) {
+        if(Hero.Name == Name("PickerHero_" $ String(HeroIndex))) {
             UnPossess();
             Possess(Hero, false);
             break;
@@ -294,13 +808,13 @@ Exec Function PossessHero(Name HeroName) {
     }
 }
 
-Exec Function SetTargetHero(Name HeroName) {
+Exec Function SetTargetHero(Int HeroIndex) {
     local OLBot Bot;
     local PickerHero Hero;
 
     Foreach AllActors(Class'OLBot', Bot) {
         Foreach AllActors(Class'PickerHero', Hero) {
-            if(Hero.Name == HeroName) {
+            if(Hero.Name == Name("PickerHero_" $ String(HeroIndex))) {
                 Bot.TargetPlayer = Hero;
                 break;
             }
@@ -588,7 +1102,8 @@ Function RandomizerQuickEvents() {
     RandLightColor();
     RandPatientModel();
     RandPlayerSpeed();
-    RandChangeFOV();
+    RandChangeDoorMeshType();
+    //RandChangeFOV();
 }
 
 /************************INSANEPLUS FUNCTIONS************************/
@@ -995,6 +1510,15 @@ Function InsanePlusFastEnemy() {
         }
         return;
     }
+    else if(Checkpoint ~= "Prison_PrisonFloor_SecurityRoom1") {
+        Foreach WorldInfo.AllControllers(Class'OLBot', Bot) {
+            Bot.EnemyPawn.NormalSpeedValues.PatrolSpeed=900;
+            Bot.EnemyPawn.NormalSpeedValues.InvestigateSpeed=945;
+            Bot.EnemyPawn.NormalSpeedValues.ChaseSpeed=1855;
+            Bot.EnemyPawn.BehaviorTree=OLBTBehaviorTree'02_AI_Behaviors.Soldier_BT';
+        }
+        return;
+    }
     else if(Checkpoint ~= "Male_Chase") {
         Foreach WorldInfo.AllControllers(Class'OLBot', Bot) {
             Bot.EnemyPawn.NormalSpeedValues.PatrolSpeed=200;
@@ -1014,7 +1538,7 @@ Function InsanePlusFastEnemy() {
     else if(Checkpoint ~= "Male_TortureDone") {
         Foreach WorldInfo.AllControllers(Class'OLBot', Bot) {
             Bot.EnemyPawn.NormalSpeedValues.PatrolSpeed=300;
-            Bot.EnemyPawn.NormalSpeedValues.InvestigateSpeed=345;
+            Bot.EnemyPawn.NormalSpeedValues.InvestigateSpeed=1945;
             Bot.EnemyPawn.NormalSpeedValues.ChaseSpeed=1975;
         }
         return;
@@ -1381,7 +1905,7 @@ Exec Function Checkpoint(String Checkpoint, Bool Save=AlwaysSaveCheckpoint) {
     List2.CheckpointList[63] = 'AdminBlock_Start';
 
     Foreach AllActors(Class'OLCheckpointList', FullList) {
-        FullList.GameType = FullList.Default.GameType;
+       // FullList.GameType = FullList.Default.GameType;
         Foreach FullList.CheckpointList(CPName) {
             if(CPName == Name(Checkpoint)) {
                 ConsoleCommand("Streammap All_Checkpoints");
@@ -1402,14 +1926,20 @@ Exec Function Checkpoint(String Checkpoint, Bool Save=AlwaysSaveCheckpoint) {
         }
     }
     SendMsg("Wrong Checkpoint Name!");
-    if(CGame.IsPlayingDLC()) {
+   /* if(CGame.IsPlayingDLC()) {
         List.Destroy();
-        List2.GameType = OGT_Whistleblower;
+        List2.Destroy();
     }
     else {
         List2.Destroy();
         List.GameType = OGT_Outlast;
-    }
+    }*/
+    List.Destroy();
+    List2.Destroy();
+}
+
+Exec Function prs(String CP) {
+     StartNewGameAtCheckpoint(CP, false);
 }
 
 Exec Function FinishGame(String Game="Both") {
@@ -1593,7 +2123,7 @@ Exec Function MadeFollowLight(Float Bright=0.7, Float Radius=1024, Byte R=255, B
     bFollowLight = !bFollowLight;
     if(bFollowLight) {
         PickerFollowLight = Spawn(Class'PickerPointLight', Self,, vect(0,0,0));
-        PickerFollowLight.OnTurn(true);
+        //PickerFollowLight.OnTurn(true);
         PickerFollowLight.SetBrightness(Bright);
         PickerFollowLight.SetColor(R,G,B,A);
         PickerFollowLight.SetRadius(Radius);
@@ -1608,11 +2138,16 @@ Exec Function MadeFollowLight(Float Bright=0.7, Float Radius=1024, Byte R=255, B
 }
 
 Function MoveFollowLight() {
-    local Vector C;
+    local Vector C, B;
     local Rotator Rot;
+    local OLFlashLight FF;
 
     GetPlayerViewPoint(C, Rot);
     PickerFollowLight.SetLocation(C);
+    /*Foreach AllActors(Class'OLFlashLight', FF) {
+        FF.SetLocation(PickerHero(Pawn).Location + vect(40,20,110));
+        FF.SetRotation(Rot + rot(32768,0,32768));
+    }*/
 }
 
 Exec Function TogglePickerMenu(Bool Show) {
@@ -1636,7 +2171,7 @@ Exec Function TogglePickerMenu(Bool Show) {
             DisableInput(false);
             PlayerInput.ResetInput();
             MenuMusicComponent.Stop();
-            DebugFreeCamSpeed = Default.DebugFreeCamSpeed;
+            DebugFreeCamSpeed = fDebugSpeed;
             break;
     }
 }
@@ -1752,7 +2287,7 @@ Exec Function ChangeDoorMeshType(String MeshType, Name CustomSndMat='Default') {
     local SkeletalMesh BreakMeshL, BreakMeshR;
     local MaterialInstanceConstant MainMeshMat, MainMeshMat2;
 
-    SendMsg(MeshType @ String(CustomSndMat));
+    //SendMsg(MeshType @ String(CustomSndMat));
 
     Switch(MeshType) {
         case "Undefined":
@@ -2325,9 +2860,43 @@ Exec Function ChangeBatteries(Int Increase=1) {
     }
 }
 
+Exec Function ToggleFixedcam() {
+    if(bDebugFullyGhost) {
+        SendMsg("Unavailable in Ghost!");
+        return;
+    }
+    else if(RandomizerState) { // Thanks OLHeroMefedron#6611
+        Reload();
+        return;
+    }
+    else if(InsanePlusState) {
+        DS(9999);
+        return;
+    }
+    if(UsingFirstPersonCamera() || bDebugFreeCam) {
+        ConsoleCommand("Camera Fixedcam");
+        bDebugFixedCam = true;
+    }
+    else {
+        ConsoleCommand("Camera Default");
+        bDebugFixedCam = false;
+    }
+}
+
 Exec Function ToggleFreecam() {
     if(bDebugFullyGhost) {
         SendMsg("Unavailable in Ghost!");
+        return;
+    }
+    else if(bThirdPersonMode && bDebugFixedCam) {
+        ConsoleCommand("Camera Freecam");
+        bDebugFreeCam = true;
+        return;
+    }
+    else if(bThirdPersonMode && !bDebugFixedCam && bDebugFreeCam) {
+        ConsoleCommand("Camera Default");
+        bDebugFreeCam = false;
+        ToggleFixedcam();
         return;
     }
     else if(RandomizerState) {
@@ -2338,12 +2907,40 @@ Exec Function ToggleFreecam() {
         DS(9999);
         return;
     }
-    if(UsingFirstPersonCamera()) {
+    if(UsingFirstPersonCamera() || bDebugFixedCam) {
         ConsoleCommand("Camera Freecam");
+        bDebugFreeCam = true;
     }
     else {
         ConsoleCommand("Camera Default");
+        bDebugFreeCam = false;
     }
+}
+
+Exec Function FreecamSpeed(Float Speed=0.0040) {
+    fDebugSpeed = Speed;
+    DebugFreeCamSpeed = Speed;
+}
+
+Exec Function FreecamFOV(Float FOV){
+    local CameraActor CamActor;
+    DebugFreeCamFOV = FOV;
+    CamActor = CameraActor(ViewTarget);
+    CamActor.FOVAngle = FOV;
+}
+
+Exec Function ToggleGrain() {
+    bGrainDisabled = !bGrainDisabled;
+    if(bGrainDisabled) {
+        FXManager.CurrentUberPostEffect.GrainOpacity = 0;
+    }
+    else {
+       FXManager.CurrentUberPostEffect.GrainOpacity = FXManager.CurrentUberPostEffect.Default.GrainOpacity;
+    }
+}
+
+Exec Function Execute(Name Command='Prikol') {
+    WorldInfo.Game.SetTimer(0.0001, false, Command, Self);
 }
 
 Exec Function ToggleAIDebug() {
@@ -2376,6 +2973,17 @@ Exec Function ToggleNoclip() {
         SendMsg("Unavailable in Ghost!");
         return;
     }
+    else if(bThirdPersonMode && !bDebugFixedCam && bDebugGhost) {
+        bDebugGhost = false;
+        PickerHero(Pawn).bNoclip = false;
+        SendMsg("Noclip OFF!", 1.5);
+        ToggleFixedcam();
+        return;
+    }
+    else if(bThirdPersonMode && !bDebugFixedCam && !bDebugGhost) {
+        SendMsg("Unavailable in ThirdPerson!");
+        return;
+    }
     else if(RandomizerState) {
         Reload();
         return;
@@ -2398,6 +3006,17 @@ Exec Function ToggleNoclip() {
 Exec Function ToggleGhost() {
     if(PickerHero(Pawn).Health == 0) {
         SendMsg("Unavailable from Afterworld!");
+        return;
+    }
+    else if(bThirdPersonMode && !bDebugFixedCam && bDebugFullyGhost) {
+        bDebugFullyGhost = false;
+        PickerHero(Pawn).bNoclip = false;
+        bDebugGhost = false;
+        ConsoleCommand("Camera Default");
+        PickerHero(Pawn).ResetAfterTeleport();
+        SendMsg("Ghost OFF!", 1.5);
+        CheatManager.GhostPawn(bDebugFullyGhost);
+        ToggleFixedcam();
         return;
     }
     else if(RandomizerState) {
@@ -2653,6 +3272,29 @@ Exec Function TriggerDoor(DoorEventType Event) {
 
     Foreach AllActors(Class'OLDoor', Door) {
         Door.TriggerEvent(Event, PickerHero(Pawn));
+    }
+}
+
+Exec Function FunBash(Bool bReversed=false) {
+    local OLDoor Door;
+
+    Foreach AllActors(Class'OLDoor', Door) {
+        if(Int(GetRightMost(String(Door.Name))) % 2 == 0) {
+            Door.BashDoor(bReversed);
+        }
+        else {
+            WorldInfo.Game.SetTimer(0.25, false, 'FunBashSecond', Self);
+        }
+    }
+}
+
+Function FunBashSecond(Bool bReversed=false) {
+    local OLDoor Door;
+
+    Foreach AllActors(Class'OLDoor', Door) {
+        if(Int(GetRightMost(String(Door.Name))) % 2 != 0) {
+            Door.BashDoor(bReversed);
+        }
     }
 }
 
@@ -3584,12 +4226,16 @@ Exec Function ShowObj(String ObjectiveText, Float LifeTime=0, Bool Normal=false)
 }
 
 Exec Function ShowTrig(Bool Show) {
-    local TriggerVolume Trigger;
+    local TriggerVolume TriggerVolume;
+    local Trigger Trigger;
 
-    Foreach AllActors(Class'TriggerVolume', Trigger) {
-		Trigger.BrushComponent.SetHidden(!Show);
-		Trigger.SetHidden(!Show);
+    Foreach AllActors(Class'TriggerVolume', TriggerVolume) {
+		TriggerVolume.BrushComponent.SetHidden(!Show);
+		TriggerVolume.SetHidden(!Show);
 	}
+    Foreach AllActors(Class'Trigger', Trigger) {
+        Trigger.CylinderComponent.SetHidden(!Show);
+    }
 }
 
 Function ShowMsg(EHUDMessageType MsgType, String Msg) {
@@ -4362,7 +5008,12 @@ Function Color RandColor(Byte Alpha) {
     return Color;
 }
 
+Exec Function ppp() {
+    SendMsg(ManualAutoCompleteList[0].Command);
+}
+
 Simulated Event PostBeginPlay() {
+
     Super(PlayerController).PostBeginPlay();
     if(TutorialManager != none) {
         TutorialManager.Clear();
@@ -4393,6 +5044,26 @@ State PlayerWalking {
         }       
     }
     stop;    
+}
+
+Function Float ScalebyCam(Float Float) { // Thanks speedrunhelper for idea <3
+	Local Float Scale;
+	Scale = (GetFOVAngle() / 100);
+
+	Return Float * Scale;
+}
+
+Function Float ScalebyVel(Float Float) {
+	Local Float Scale;
+	Scale = (VSize(PickerHero(Pawn).Velocity) / 100 );
+
+    SendMsg(String(Float * Scale));
+    if(Float * Scale >= 5) {
+        return 5;
+    }
+    else {
+	    Return Float * Scale;
+    }
 }
 
 Function Bool AllowAutoJump() {
@@ -4446,15 +5117,21 @@ Function Bool AllowAutoJump() {
 }
 
 Event Tick(Float DeltaTime) {
+    LocalPlayer(Player).ViewportClient.GetViewportSize(ViewportCurrentSize);
+    PickerHero(Pawn).Camera.ViewCS.Yaw = 180;
+    PickerHero(Pawn).Camera.ViewCS.Pitch = 180;
     if(PickerInput(PlayerInput).IsKeyPressed('LeftControl') || PickerInput(PlayerInput).IsKeyPressed('RightControl')) {
-            //if(Key == 'V') {
-             //   SendMsg("Ddsdsd");
-           // }
             PickerInput(PlayerInput).bCtrlPressed = true;
         }
-        else {
-            PickerInput(PlayerInput).bCtrlPressed = false;
-        }
+    else {
+        PickerInput(PlayerInput).bCtrlPressed = false;
+    }
+    if(PickerInput(PlayerInput).IsKeyPressed('LeftShift') || PickerInput(PlayerInput).IsKeyPressed('RightShift')) {
+        PickerInput(PlayerInput).bShiftPressed = true;
+    }
+    else {
+        PickerInput(PlayerInput).bShiftPressed = false;
+    }
     Super.Tick(DeltaTime);
 }
 
@@ -4513,6 +5190,7 @@ DefaultProperties
     ArrayPatientModel(43) = "Scientist2"
     ArrayPatientModel(44) = "Scientist3"
     ArrayPatientModel(45) = "WorkerBloodyHeadless"
+    fDebugSpeed = 0.0040
     fPlayerAnimRate = 1
     fEnemyAnimRate = 1
     vScaleEnemies = (X=1,Y=1,Z=1)
@@ -4537,4 +5215,92 @@ DefaultProperties
     TeleportSound = SoundCue'PickerDebugMenu.TeleportSound'
     ButtonSound = SoundCue'PickerDebugMenu.Button_Click'
     MenuMusic = SoundCue'PickerDebugMenu.MenuMusic'
+    ManualAutoCompleteList(0)=(Command="Exit",Desc="Exit (Exits the game)")
+    ManualAutoCompleteList(1)=(Command="DebugCreatePlayer 1",Desc="")
+    ManualAutoCompleteList(2)=(Command="FreezeAt",Desc="Locks the player view and rendering time.")
+    ManualAutoCompleteList(3)=(Command="SSSwapControllers",Desc="")
+    ManualAutoCompleteList(4)=(Command="Open",Desc="Open <MapName> (Opens the specified map)")
+    ManualAutoCompleteList(5)=(Command="DisplayAll",Desc="DisplayAll <ClassName> <PropertyName> (Display property values for instances of classname)")
+    ManualAutoCompleteList(6)=(Command="DisplayAllState",Desc="DisplayAllState <ClassName> (Display state names for all instances of classname)")
+    ManualAutoCompleteList(7)=(Command="DisplayClear",Desc="DisplayClear (Clears previous DisplayAll entries)")
+    ManualAutoCompleteList(8)=(Command="FlushPersistentDebugLines",Desc="FlushPersistentDebugLines (Clears persistent debug line cache)")
+    ManualAutoCompleteList(9)=(Command="GetAll ",Desc="GetAll <ClassName> <PropertyName> <Name=ObjectInstanceName> <OUTER=ObjectInstanceName> <SHOWDEFAULTS> <SHOWPENDINGKILLS> <DETAILED> (Log property values of all instances of classname)")
+    ManualAutoCompleteList(10)=(Command="GetAllState",Desc="GetAllState <ClassName> (Log state names for all instances of classname)")
+    ManualAutoCompleteList(11)=(Command="Obj List ",Desc="Obj List <Class=ClassName> <Type=MetaClass> <Outer=OuterObject> <Package=InsidePackage> <Inside=InsideObject>")
+    ManualAutoCompleteList(12)=(Command="Obj ListContentRefs",Desc="Obj ListContentRefs <Class=ClassName> <ListClass=ClassName>")
+    ManualAutoCompleteList(13)=(Command="Obj Classes",Desc="Obj Classes (Shows all classes)")
+    ManualAutoCompleteList(14)=(Command="Obj Refs",Desc="Name=<ObjectName> Class=<OptionalObjectClass> Lists referencers of the specified object")
+    ManualAutoCompleteList(15)=(Command="EditActor",Desc="EditActor <Class=ClassName> or <Name=ObjectName> or TRACE")
+    ManualAutoCompleteList(16)=(Command="EditDefault",Desc="EditDefault <Class=ClassName>")
+    ManualAutoCompleteList(17)=(Command="EditObject",Desc="EditObject <Class=ClassName> or <Name=ObjectName> or <ObjectName>")
+    ManualAutoCompleteList(18)=(Command="ReloadCfg ",Desc="ReloadCfg <Class/ObjectName> (Reloads config variables for the specified object/class)")
+    ManualAutoCompleteList(19)=(Command="ReloadLoc ",Desc="ReloadLoc <Class/ObjectName> (Reloads localized variables for the specified object/class)")
+    ManualAutoCompleteList(20)=(Command="Set ",Desc="Set <ClassName> <PropertyName> <Value> (Sets property to value on objectname)")
+    ManualAutoCompleteList(21)=(Command="Show BOUNDS",Desc="Show BOUNDS (Displays bounding boxes for all visible objects)")
+    ManualAutoCompleteList(22)=(Command="Show BSP",Desc="Show BSP (Toggles BSP rendering)")
+    ManualAutoCompleteList(23)=(Command="Show COLLISION",Desc="Show COLLISION (Toggles collision rendering)")
+    ManualAutoCompleteList(24)=(Command="Show COVER",Desc="Show COVER (Toggles cover rendering)")
+    ManualAutoCompleteList(25)=(Command="Show DECALS",Desc="Show DECALS (Toggles decal rendering)")
+    ManualAutoCompleteList(26)=(Command="Show FOG",Desc="Show FOG (Toggles fog rendering)")
+    ManualAutoCompleteList(27)=(Command="Show LEVELCOLORATION",Desc="Show LEVELCOLORATION (Toggles per-level coloration)")
+    ManualAutoCompleteList(28)=(Command="Show PATHS",Desc="Show PATHS (Toggles path rendering)")
+    ManualAutoCompleteList(29)=(Command="Show POSTPROCESS",Desc="Show POSTPROCESS (Toggles post process rendering)")
+    ManualAutoCompleteList(30)=(Command="Show SKELMESHES",Desc="Show SKELMESHES (Toggles skeletal mesh rendering)")
+    ManualAutoCompleteList(31)=(Command="Show TERRAIN",Desc="Show TERRAIN (Toggles terrain rendering)")
+    ManualAutoCompleteList(32)=(Command="Show VOLUMES",Desc="Show VOLUMES (Toggles volume rendering)")
+    ManualAutoCompleteList(33)=(Command="Show SPLINES",Desc="Show SPLINES (Toggles spline rendering)")
+    ManualAutoCompleteList(34)=(Command="ShowSet",Desc="Sets a show flag to enable it")
+    ManualAutoCompleteList(35)=(Command="ShowClear",Desc="Clears a show flag to disable it")
+    ManualAutoCompleteList(36)=(Command="Stat FPS",Desc="Stat FPS (Shows FPS counter)")
+    ManualAutoCompleteList(37)=(Command="Stat UNIT",Desc="Stat UNIT (Shows hardware unit framerate)")
+    ManualAutoCompleteList(38)=(Command="Stat LEVELS",Desc="Stat LEVELS (Displays level streaming info)")
+    ManualAutoCompleteList(39)=(Command="Stat GAME",Desc="Stat GAME (Displays game performance stats)")
+    ManualAutoCompleteList(40)=(Command="Stat MEMORY",Desc="Stat MEMORY (Displays memory stats)")
+    ManualAutoCompleteList(41)=(Command="Stat XBOXMEMORY",Desc="Stat XBOXMEMORY (Displays Xbox memory stats while playing on PC)")
+    ManualAutoCompleteList(42)=(Command="Stat PHYSICS",Desc="Stat PHYSICS (Displays physics performance stats)")
+    ManualAutoCompleteList(43)=(Command="Stat STREAMING",Desc="Stat STREAMING (Displays basic texture streaming stats)")
+    ManualAutoCompleteList(44)=(Command="Stat STREAMINGDETAILS",Desc="Stat STREAMINGDETAILS (Displays detailed texture streaming stats)")
+    ManualAutoCompleteList(45)=(Command="Stat COLLISION",Desc="Stat COLLISION")
+    ManualAutoCompleteList(46)=(Command="Stat PARTICLES",Desc="Stat PARTICLES")
+    ManualAutoCompleteList(47)=(Command="Stat SCRIPT",Desc="Stat SCRIPT")
+    ManualAutoCompleteList(48)=(Command="Stat AUDIO",Desc="Stat AUDIO")
+    ManualAutoCompleteList(49)=(Command="Stat ANIM",Desc="Stat ANIM")
+    ManualAutoCompleteList(50)=(Command="Stat NET",Desc="Stat NET")
+    ManualAutoCompleteList(51)=(Command="Stat LIST",Desc="Stat LIST Groups/Sets/Group (List groups of stats, saved sets, or specific stats within a specified group)")
+    ManualAutoCompleteList(52)=(Command="Stat splitscreen",Desc="")
+    ManualAutoCompleteList(53)=(Command="ListTextures",Desc="ListTextures (Lists all loaded textures and their current memory footprint)")
+    ManualAutoCompleteList(54)=(Command="ListUncachedStaticLightingInteractions",Desc="ListUncachedStaticLightingInteractions (Lists all uncached static lighting interactions, which causes Lighting needs to be rebuilt messages)")
+    ManualAutoCompleteList(55)=(Command="RestartLevel",Desc="RestartLevel (restarts the level)")
+    ManualAutoCompleteList(56)=(Command="ListSounds",Desc="ListSounds (Lists all the loaded sounds and their memory footprint)")
+    ManualAutoCompleteList(57)=(Command="ListWaves",Desc="ListWaves (List the WaveInstances and whether they have a source)")
+    ManualAutoCompleteList(58)=(Command="ListSoundClasses",Desc="ListSoundClasses (Lists a summary of loaded sound collated by class)")
+    ManualAutoCompleteList(59)=(Command="ListSoundModes",Desc="ListSoundModes (Lists loaded sound modes)")
+    ManualAutoCompleteList(60)=(Command="ListAudioComponents",Desc="ListAudioComponents (Dumps a detailed list of all AudioComponent objects)")
+    ManualAutoCompleteList(61)=(Command="ListSoundDurations",Desc="ListSoundDurations")
+    ManualAutoCompleteList(62)=(Command="PlaySoundCue",Desc="PlaySoundCue (Lists a summary of loaded sound collated by class)")
+    ManualAutoCompleteList(63)=(Command="PlaySoundWave",Desc="PlaySoundWave")
+    ManualAutoCompleteList(64)=(Command="SetSoundMode",Desc="SetSoundMode <ModeName>")
+    ManualAutoCompleteList(65)=(Command="DisableLowPassFilter",Desc="DisableLowPassFilter")
+    ManualAutoCompleteList(66)=(Command="DisableEQFilter",Desc="DisableEQFilter")
+    ManualAutoCompleteList(67)=(Command="IsolateDryAudio",Desc="IsolateDryAudio")
+    ManualAutoCompleteList(68)=(Command="IsolateReverb",Desc="IsolateReverb")
+    ManualAutoCompleteList(69)=(Command="ResetSoundState",Desc="ResetSoundState (Resets volumes to default and removes test filters)")
+    ManualAutoCompleteList(70)=(Command="ModifySoundClass",Desc="ModifySoundClass <SoundClassName> Vol=<new volume>")
+    ManualAutoCompleteList(71)=(Command="DisableAllScreenMessages",Desc="Disables all on-screen warnings/messages")
+    ManualAutoCompleteList(72)=(Command="EnableAllScreenMessages",Desc="Enables all on-screen warnings/messages")
+    ManualAutoCompleteList(73)=(Command="ToggleAllScreenMessages",Desc="Toggles display state of all on-screen warnings/messages")
+    ManualAutoCompleteList(74)=(Command="CaptureMode",Desc="Toggles display state of all on-screen warnings/messages")
+    ManualAutoCompleteList(75)=(Command="memleakcheck",Desc="")
+    ManualAutoCompleteList(76)=(Command="togglehdwarning",Desc="")
+    ManualAutoCompleteList(77)=(Command="Stat SOUNDWAVES",Desc="Stat SOUNDWAVES (Shows active SoundWaves)")
+    ManualAutoCompleteList(78)=(Command="Stat SOUNDCUES",Desc="Stat SOUNDCUES (Shows active SoundCues)")
+    ManualAutoCompleteList(79)=(Command="Stat SOUNDS",Desc="Stat SOUNDS <?> <sort=distance|class|name|waves|default> <-debug> <off> (Shows active SoundCues and SoundWaves)")
+    ManualAutoCompleteList(80)=(Command="STARTMOVIECAPTURE",Desc="STARTMOVIECAPTURE")
+    ManualAutoCompleteList(81)=(Command="STOPMOVIECAPTURE",Desc="STOPMOVIECAPTURE")
+    ManualAutoCompleteList(82)=(Command="DoMemLeakChecking 30",Desc="Sets a timer to do a MemLeakCheck every N seconds")
+    ManualAutoCompleteList(83)=(Command="StopMemLeakChecking",Desc="Stops the periodic MemLeakCheck that was started via DoMemLeakChecking")
+    ManualAutoCompleteList(84)=(Command="ToggleOcclusion",Desc="Toggles use and submission of the occlusion queries,")
+    ManualAutoCompleteList(85)=(Command="ToggleMultiThreadedRendering",Desc="Toggles use of multithreaded rendering on platforms that supports it.")
+    ManualAutoCompleteList(86)=(Command="ShowDebug OLAI",Desc="ShowDebug OLAI (Shows Outlast AI Info)")
+    ManualAutoCompleteList(87)=(Command="ShowDebug VOICEMANAGER",Desc="ShowDebug VOICEMANAGER (Shows VoiceManager Info)")
 }

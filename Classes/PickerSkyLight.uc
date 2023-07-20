@@ -22,26 +22,6 @@ Function SetColor(Byte ir, Byte ig, Byte ib, Byte ia) {
     LightComponent.UpdateColorAndBrightness();
 }
 
-//Default 1024.0
-/*Function SetRadius(Float r) {
-	DominantDirectionalLightComponent(LightComponent).Radius = r;
-}
-
-//Default 2.0
-Function SetFallOffExponent(Float e) {
-	DominantDirectionalLightComponent(LightComponent).FalloffExponent = e;
-}
-
-//Default 2.0
-Function SetShadowFalloffExponent(Float e) {
-	DominantDirectionalLightComponent(LightComponent).ShadowFalloffExponent = e;
-}
-
-//Default 1.1
-Function SetShadowRadiusMultiplier(Float f) {
-	DominantDirectionalLightComponent(LightComponent).ShadowRadiusMultiplier = f;
-}*/
-
 Function SetCastDynamicShadows(Bool b) {
 	LightComponent.CastDynamicShadows = b;
 }

@@ -133,6 +133,12 @@ Event Tick(Float DeltaTime) {
     else {
         PickerInput.bCtrlPressed = false;
     }
+    if(PickerInput.IsKeyPressed('LeftShift')) {
+        PickerInput.bShiftPressed = true;
+    }
+    else {
+        PickerInput.bShiftPressed = false;
+    }
     if(Controller.bAutoBunnyHop) {
         Controller.ConsoleCommand("PressedJump");
     }

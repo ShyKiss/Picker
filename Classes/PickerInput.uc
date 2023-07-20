@@ -4,7 +4,7 @@ Class PickerInput extends OLPlayerInput within PickerController
 var PrivateWrite IntPoint MousePos;
 var Array<Name> Keys;
 var Vector2D Movement, Turning;
-var Bool bSpacePressed, bCtrlPressed, FirstLaunchMousePos;
+var Bool bSpacePressed, bCtrlPressed, bShiftPressed, FirstLaunchMousePos;
 var String MathTasksAnswer;
 var Int CommandPos;
 var Config Int HistoryTop, HistoryBot, HistoryCur;
@@ -29,7 +29,7 @@ Event PlayerInput(Float DeltaTime) {
 }
 
 Function SetCursorPos(Int Pos) {
-    CommandPos = Pos; 
+    CommandPos = Pos;
 }
 
 Function InputCommand(String Text) {
@@ -104,10 +104,16 @@ Function Bool Key(Int ControllerId, Name Key, EInputEvent Event, Float AmountDep
         else {
             Switch(Key) {
                 case 'LeftMouseButton':
-                    PickerHud(HUD).Click();
+                    PickerHud(HUD).Click(0);
                     break;
                 case 'RightMouseButton':
                     PickerHud(HUD).Back();
+                    break;
+                case 'MouseScrollUp':
+                    PickerHud(HUD).Click(1);
+                    break;
+                case 'MouseScrollDown':
+                    PickerHud(HUD).Click(2);
                     break;
                 case 'Enter':
                     PurgeCommandFromHistory(PickerHud(HUD).Command);
@@ -174,6 +180,9 @@ Function Bool Key(Int ControllerId, Name Key, EInputEvent Event, Float AmountDep
                 case 'LeftControl':
                     return false;
                     break;
+                case 'LeftShift':
+                    return false;
+                    break;
             }
             return true;
         }
@@ -191,6 +200,20 @@ Function Bool Key(Int ControllerId, Name Key, EInputEvent Event, Float AmountDep
                 break;
         }
         return true;
+    }
+    else if(bDebugFreeCam &&  Event == IE_Pressed || bDebugFreeCam &&  Event == IE_Repeat) {
+        Switch(Key) {
+            case 'MouseScrollUp':
+                FreecamSpeed(fDebugSpeed * 1.2);
+                break;
+            case 'MouseScrollDown':
+                FreecamSpeed(fDebugSpeed / 1.2);
+                break;
+            case 'MiddleMouseButton':
+                FreecamSpeed(Default.fDebugSpeed);
+                break;
+        }
+        return false;
     }
     return false;
 }
@@ -254,6 +277,7 @@ Function Bool Char(Int ControllerId, String Unicode) {
 
 DefaultProperties
 {
+    YawAccelThreshold = 0.90
     FirstLaunchMousePos = true
     HistoryBot=-1
     OnReceivedNativeInputKey = Key

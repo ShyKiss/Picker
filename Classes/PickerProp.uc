@@ -1,6 +1,5 @@
 Class PickerProp extends StaticMeshActor;
 
-//var() export editinline StaticMeshComponent PickerMesh;
 DefaultProperties
 {
     Begin Object Class=DynamicLightEnvironmentComponent Name=LE
@@ -22,7 +21,4 @@ DefaultProperties
     bCollideActors=false
     bCollideWorld=false
     HiddenEditor=false
-    HiddenGame=false
-    //CollisionType=ECollisionType.COLLIDE_NoCollision
-   // StaticMeshComponent=StaticMesh'olgame.Library.Futnitures.BibliothequeWithbooks'
-}
+    }

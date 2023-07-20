@@ -57,13 +57,17 @@ enum Menu {
     AddPlayer,
     AddPO,
     Settings,
+    SettingsColor,
     Player,
     Other,
+    Cinematic,
     OTimers,
     RandomizerChoice,
     InsaneChoice,
     DisInsanePlus
 };
+
+var Config RGBA ConsoleTextColor, ConsoleColor, PromptTextColor, BackgroundColor, ButtonTextColor, ButtonColor, ReturnButtonTextColor, ReturnButtonColor, RangeButtonColor, RangeReturnButtonColor, RangeButtonTextColor;
 
 var Bool ToggleHUD, Pressed, AlreadyCommited, TSVBool, MathTasksHUD, bCinematicMode;
 var Array<ButtonStr> Buttons;
@@ -332,15 +336,23 @@ Function PostRender() {
     //PushCenter = Vect2D(0 + (0 - (Canvas.SizeX / 2)) / 2, 0 + (0 - (Canvas.SizeY / 2)) / 2);
     PushCenter = Vect2D(Canvas.SizeX / 1.02, 25);
     DrawString(StrPushMessage, PushCenter, PushColor, Vect2D(2.4, 2.4),, true);
-    Foreach TraceActors(Class'Actor', PickObject, PickObjectLocation, PickObjectNormal, CameraPos + (Normal(Vector(CameraRot)) * 10000), CameraPos) {
+    //Foreach TraceActors(Class'Actor', PickObject, PickObjectLocation, PickObjectNormal, CameraPos + (Normal(Vector(CameraRot)) * 10000), CameraPos) {
         SMName = "";
     //PickObject = Trace(PickObjectLocation, PickObjectNormal, CameraPos + (Normal(Vector(CameraRot)) * 10000, CameraPos));
-        if(InStr(Caps(PickObject.Name), Caps("StaticMesh")) == -1) continue;
+    PickObject = Trace(PickObjectLocation, PickObjectNormal, ((vector(CameraRot) * float(5000)) * float(20)) + CameraPos, CameraPos, true);
+    if(PickObject != None) {
+   // if(InStr(Caps(PickObject.Name), Caps("StaticMesh") == -1) {
         PickObjectName = String(PickObject.Name);
-        //if(PickObject.Class == Class'StaticMeshCollectionActor') {
-        Foreach PickObject.ComponentList(Class'StaticMeshComponent', PickObjectComp) {
-            SMName $= String(PickObjectComp.StaticMesh) @ "";
-        }
+       // if(PickObject.Class == Class'StaticMeshCollectionActor') {
+           /*Foreach PickObject.ComponentList(Class'StaticMeshComponent', PickObjectComp) {
+                SMName $= String(PickObjectComp.StaticMesh) @ "";
+            }*/
+    }
+    else {
+        PickObjectName = "";
+    }
+        //}
+    //}
        /*      PickObjectName = String(PickObject.Name);
             While(IndexSM < StaticMeshCollectionActor(PickObject).StaticMeshComponents.Length) {
                 //SMName = SMName @ String(StaticMeshCollectionActor(PickObject).StaticMeshComponents[IndexSM].StaticMesh) @ "1";
@@ -353,9 +365,9 @@ Function PostRender() {
                // ++IndexSM;
             }*/
        // }
-    }
+    //}
     Name = "[Picker]" $ IndGodMode $ IndFreecam $ IndNoclip $ IndGhost;
-    PlayerDebug = DbgLoc("FPS") @ CurrentGame.FPS $ DbgLoc("Random") @ Controller.RandString(Controller.RandByte(35)) $ DbgLoc("Velocity") @ PickerPawn.Velocity @ "(" $ PickerPawn.CurrentRunSpeed $")" @ DbgLoc("Floor") @ FloorMaterial $ DbgLoc("PlayerPosRot") @ PickerPawn.Location $ "/" $ PickerPawn.Rotation.Yaw * 0.005493 $ DbgLoc("CameraPosRot") @ CameraPos $ "/" $ CameraRot.Yaw * 0.005493 $ DbgLoc("Game") @ GameType @ DbgLoc("Health") @ HealthPlayer @ DbgLoc("Limp") @ PickerPawn.bLimping @ DbgLoc("Hobble") @ PickerPawn.bHobbling $ "/" $ PickerPawn.Hobblingintensity $ DbgLoc("CPObj") @ CurrentGame.CurrentCheckpointName $ "/" $ Controller.CurrentObjective $ DbgLoc("FOV") @ PickerPawn.DefaultFOV $ "/" $ PickerPawn.RunningFOV $ "/" $ PickerPawn.CamcorderMaxFOV $ DbgLoc("EnemyDist") @ Controller.AIDistance * 100 @ DbgLoc("PhysLoc") @ PickerPawn.Physics $ "/" $ PickerPawn.LocomotionMode/*  $ DbgLoc("LookAt") @ PickObjectName @ "(" $ SMName $ ")"*/;
+    PlayerDebug = DbgLoc("FPS") @ CurrentGame.FPS $ DbgLoc("Random") @ Controller.RandString(Controller.RandByte(35)) $ DbgLoc("Velocity") @ PickerPawn.Velocity @ "(" $ PickerPawn.CurrentRunSpeed $")" @ DbgLoc("Floor") @ FloorMaterial $ DbgLoc("PlayerPosRot") @ PickerPawn.Location $ "/" $ PickerPawn.Rotation.Yaw * 0.005493 $ DbgLoc("CameraPosRot") @ CameraPos $ "/" $ CameraRot.Yaw * 0.005493 $ DbgLoc("Game") @ GameType @ DbgLoc("Health") @ HealthPlayer @ DbgLoc("Limp") @ PickerPawn.bLimping @ DbgLoc("Hobble") @ PickerPawn.bHobbling $ "/" $ PickerPawn.Hobblingintensity $ DbgLoc("CPObj") @ CurrentGame.CurrentCheckpointName $ "/" $ Controller.CurrentObjective $ DbgLoc("FOV") @ PickerPawn.DefaultFOV $ "/" $ PickerPawn.RunningFOV $ "/" $ PickerPawn.CamcorderMaxFOV $ DbgLoc("EnemyDist") @ Controller.AIDistance * 100 @ DbgLoc("PhysLoc") @ PickerPawn.Physics $ "/" $ PickerPawn.LocomotionMode  $ DbgLoc("LookAt") @ PickObjectName @ "(" $ SMName $ ")";
     Stamina = DbgLoc("Stamina") @ Controller.InsanePlusStamina;
     if(!DisableAllActorInfo) {
         Foreach AllActors(Class'Actor', A) {
@@ -372,7 +384,12 @@ Function PostRender() {
         }
     }
     DrawString(Name, Vect2D(5, 5),MakeRGBA(226,68,61,240),Vect2D(1.3, 1.3));
-    DrawString(Localize("Other", "Version", "Picker") @ "1.31", Vect2D(1855, 5),MakeRGBA(226,68,61,240),Vect2D(1.3, 1.3));
+    DrawString(Localize("Other", "Version", "Picker") @ "1.4", Vect2D(1855, 5),MakeRGBA(226,68,61,240),Vect2D(1.3, 1.3));
+
+    //FlushPersistentDebugLines();
+    //DrawDebugBox(PickerPawn.Location,PickerPawn.GetCollisionExtent(),255,0,0,TRUE);
+    //Draw3DLine(CameraPos + (Normal(Vector(CameraRot)) * 30), PickerPawn.Location, MakeLineColor(255,255,255,255));
+
     if(Controller.InsanePlusState && Controller.TrainingMode) {
         DrawString(Localize("Other", "TrainingMode", "Picker"), Vect2D(830, 5),MakeRGBA(0,40,255,240),Vect2D(2.2, 2.2));
     }
@@ -396,8 +413,10 @@ Event ShowPickerMenu() {
     local PickerController Controller;
     local PickerHero PickerPawn;
     local Texture2D MouseTexture;
-    local String TSVString, DRKString, OGTString, ChrisString, PlayerModelString, DoorTypeState, DoorLockState;
-    local Float PlayerModelScale, EnemyModelScale;
+    local AutoCompleteCommand TempComplete;
+    local String TSVString, DRKString, OGTString, ChrisString, PlayerModelString, DoorTypeState, DoorLockState, OutComplete;
+    local Float PlayerModelScale, EnemyModelScale, SpaceComplete;
+    local Int IndexComplete;
 
     EndClip = EndClip;
     MouseTexture = Texture2D'PickerDebugMenu.PickCursor';
@@ -519,12 +538,18 @@ Event ShowPickerMenu() {
     }
     PlayerModelString = Controller.CustomPM;
     //DrawBox(Vect2D(390, 250), Vect2D(500, 250), MakeRGBA(20,20,20,180), StartClip, EndClip);
-    DrawBox(Vect2D(265, 145), Vect2D(750, 500), MakeRGBA(7,7,7,180), StartClip, EndClip);
+    DrawBox(Vect2D(265, 145), Vect2D(750, 500), MakeRGBA(BackgroundColor.Red,BackgroundColor.Green,BackgroundColor.Blue,BackgroundColor.Alpha), StartClip, EndClip); // MakeRGBA(7,7,7,180)
+    Foreach Controller.ManualAutoCompleteList(TempComplete, IndexComplete) {
+        if(InStr(Left(Caps(TempComplete.Command),Len(Command)),Caps(Command)) != -1 &&  Command != "" && Command != " ") {
+            OutComplete $= TempComplete.Command @ TempComplete.Desc $ "\n";
+            break;
+        }
+    }
     //Canvas.SetPos(390 / 1280.0f * Canvas.SizeX, 250 / 720.0f * Canvas.SizeY);
     //Canvas.SetDrawColor(45,45,45,230);
     Canvas.Font = Font'PickerDebugMenu.PickerFont';
     //Canvas.DrawRect(500 / 1280.0f * Canvas.SizeX , 12 / 720.0f * Canvas.SizeY);
-    DrawBox(Vect2D(265, 130), Vect2D(750, 15), MakeRGBA(30, 30, 33, 230));
+    DrawBox(Vect2D(265, 130), Vect2D(750, 15), MakeRGBA(ConsoleColor.Red, ConsoleColor.Green, ConsoleColor.Blue, ConsoleColor.Alpha)); // MakeRGBA(30, 30, 33, 230)
     if(MathTasksHUD && Controller.MathTasksTimer) {
         DrawString(">" @ Controller.MathTasksGlobalA @ MathTasksOperation @ Controller.MathTasksGlobalB @ "=" @ PlayerInput.MathTasksAnswer $ "_", Vect2D(399, 196.5), MakeRGBA(170, 170, 170, 255), Vect2D(1.8, 1.8));
         AddButton(String(10 - WorldInfo.Game.GetTimerCount('MathTasksCheck', Controller)), "", Vect2D(285, 165),, StartClip, EndClip);
@@ -533,7 +558,8 @@ Event ShowPickerMenu() {
     if(!Controller.InsanePlusState) {
         //DrawString(">" @ Command $ "_", Vect2D(590, 375), MakeRGBA(170,170,170,255));
         //DrawString(">" @ Command $ "_", Vect2D(399, 196.5), MakeRGBA(170, 170, 170, 255), Vect2D(1.8, 1.8));
-        DrawConsoleString(">" @ Command, Vect2D(400, 194), MakeRGBA(210, 210, 220, 255), Vect2D(1.8, 1.8));
+        DrawString(OutComplete, Vect2D(399, 156), MakeRGBA(PromptTextColor.Red, PromptTextColor.Green, PromptTextColor.Blue, PromptTextColor.Alpha), Vect2D(1.8, 1.8)); // MakeRGBA(190, 190, 190, 255)
+        DrawConsoleString(">" @ Command, Vect2D(400, 194), MakeRGBA(ConsoleTextColor.Red, ConsoleTextColor.Green, ConsoleTextColor.Blue,ConsoleTextColor.Alpha), Vect2D(1.8, 1.8)); //MakeRGBA(210, 210, 220, 255)
         if(!DisableButtonDescs) {
             DrawString(FinalDesc, Vect2D(1375, 140), MakeRGBA(240, 240, 240, 255));
         }
@@ -545,8 +571,9 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("WorldFunctions"), "SetMenu World WorldFuncs",, true);
                 AddButton(ButtonLoc("OtherFunctions"), "SetMenu Other OtherFuncs",, true);
                 AddButton(ButtonLoc("AddandRemove"), "SetMenu Add AddFuncs",, true);
+                AddButton(ButtonLoc("CinematicFunctions"), "SetMenu Cinematic NothingFuncs",, true);
                 AddButton(ButtonLoc("PickerSettings"), "SetMenu Settings SettingsFuncs",, true);
-                AddButton(ButtonLoc("Close"), "TogglePickerMenu false", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("Close"), "TogglePickerMenu false", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha)); // MakeRGBA(226, 68, 61, 225) MakeRGBA(180, 147, 145, 225) MakeRGBA(255, 255, 255, 255)
                 break;
             case ShowDebug:
                 AddButton(ButtonLoc("AI"), "ToggleAIDebug", Vect2D(285, 165),, StartClip, EndClip,,);
@@ -569,11 +596,14 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("FREEZESTREAMING"), "FREEZESTREAMING",, true);
                 AddButton(ButtonLoc("SHOWMIPLEVELS"), "SHOWMIPLEVELS",, true);
                 AddButton(ButtonLoc("LockFPS"), "ChangeFrameLock ",, true,,, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("DeleteAllSaves"), "DeleteAllSaves",, true);
+                AddButton(ButtonLoc("SaveAllSaves"), "SaveAllSaves",, true);
+                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case Player:
                 AddButton(ButtonLoc("GodMode") @ PickerPawn.bGodMode, "ToggleGodMode", Vect2D(285, 165),, StartClip, EndClip);
-                AddButton(ButtonLoc("Freecam") @ !Controller.UsingFirstPersonCamera(), "ToggleFreecam",, true);
+                AddButton(ButtonLoc("Freecam") @ Controller.bDebugFreeCam, "ToggleFreecam",, true);
+                AddButton(ButtonLoc("Fixedcam") @ Controller.bDebugFixedCam, "ToggleFixedcam",, true);
                 AddButton(ButtonLoc("Noclip") @ Controller.bDebugGhost, "ToggleNoclip",, true);
                 AddButton(ButtonLoc("Ghost") @ Controller.bDebugFullyGhost, "ToggleGhost",, true);
                 AddButton(ButtonLoc("BunnyHop") @ Controller.bBhop, "ToggleBhop",, true);
@@ -581,6 +611,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("UnlimitedBatteries") @ Controller.CheatManager.bUnlimitedBatteries, "ToggleUnlimitedBatteries",, true);
                 AddButton(ButtonLoc("Limp") @ PickerPawn.bLimping, "Limp",, true);
                 AddButton(ButtonLoc("Hobble") @ PickerPawn.bHobbling $ "/" $ PickerPawn.HobblingIntensity, "Hobble ",, true,,, !PickerPawn.bHobbling);
+                AddButton(ButtonLoc("ToggleThirdPerson") @ Controller.bThirdPersonMode, "ToggleThirdPerson" @ Controller.bThirdPersonMode,, true);
                 AddButton(ButtonLoc("Batteries") @ Controller.NumBatteries, "ChangeBatteries ",, true,,, true);
                 AddButton(ButtonLoc("FreeAnimations") @ Controller.bAnimFree, "AnimFree",, true);
                 AddButton(ButtonLoc("PlayerAnimationSpeed") @ Controller.fPlayerAnimRate, "PlayerAnimRate ",, true,,, true);
@@ -590,7 +621,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("PlayerModel") @ PlayerModelString, "ChangePlayerModel ",, true,,, true);
                 AddButton(ButtonLoc("PlayerScale") @ Controller.vScalePlayer, "ScalePlayer ",, true,,, true);
                 AddButton(ButtonLoc("CameraBone") @ PickerPawn.Camera.CameraBoneName, "CameraBone ",, true,,, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case Enemy:
                 AddButton(ButtonLoc("KillEnemy"), "ToggleKillEnemy", Vect2D(285, 165),, StartClip, EndClip);
@@ -601,7 +632,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("EnemyAnimationSpeed") @ Controller.fEnemyAnimRate, "EnemyAnimRate ",, true,,, true);
                 AddButton(ButtonLoc("PlayEnemyAnim"), "PlayEnemyAnim ",, true,,, true);
                 AddButton(ButtonLoc("Force") @ bForceFuncs, "ToggleForceFuncs",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case World:
                 AddButton(ButtonLoc("DoorFunctions"), "SetMenu WDoors DoorsFuncs", Vect2D(285, 165),, StartClip, EndClip);
@@ -617,7 +648,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Gravity") @ WorldInfo.WorldGravityZ, "SetGravity ",, true,,, true);
                 AddButton(ButtonLoc("AudioVolume"), "SetVolume ",, true,,, true);
                 AddButton(ButtonLoc("DestroyClass"), "DelClass ",, true,,, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WChapters:
                 AddButton(ButtonLoc("AdminBlock1"), "SetMenu WAdmin1 NothingFuncs", Vect2D(285, 165),, StartClip, EndClip);
@@ -637,7 +668,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Exit1"), "SetMenu WExit NothingFuncs",, true);
                 AddButton(ButtonLoc("SkipStart"), "SkipStart",, true);
                 AddButton(ButtonLoc("SkipTorture"), "SkipTorture",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu World WorldFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu World WorldFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WAdmin1:
                 AddButton(ButtonLoc("StartGame"), "CP StartGame", Vect2D(285, 165),, StartClip, EndClip);
@@ -651,7 +682,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Admin_Basement"), "CP Admin_Basement",, true);
                 AddButton(ButtonLoc("Admin_Electricity"), "CP Admin_Electricity",, true);
                 AddButton(ButtonLoc("Admin_PostBasement"), "CP Admin_PostBasement",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WPrison1:
                 AddButton(ButtonLoc("Prison_Start"), "CP Prison_Start", Vect2D(285, 165),, StartClip, EndClip);
@@ -668,7 +699,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Prison_OldCells_PreStruggle"), "CP Prison_OldCells_PreStruggle",, true);
                 AddButton(ButtonLoc("Prison_OldCells_PreStruggle2"), "CP Prison_OldCells_PreStruggle2",, true);
                 AddButton(ButtonLoc("Prison_Showers_Exit"), "CP Prison_Showers_Exit",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WSewer:
                 AddButton(ButtonLoc("Sewer_start"), "CP Sewer_start", Vect2D(285, 165),, StartClip, EndClip);
@@ -680,7 +711,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Sewer_Citern2"), "CP Sewer_Citern2",, true);
                 AddButton(ButtonLoc("Sewer_PostCitern"), "CP Sewer_PostCitern",, true);
                 AddButton(ButtonLoc("Sewer_ToMaleWard"), "CP Sewer_ToMaleWard",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WMaleWard:
                 AddButton(ButtonLoc("Male_Start"), "CP Male_Start", Vect2D(285, 165),, StartClip, EndClip);
@@ -697,7 +728,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Male_Cafeteria"), "CP Male_Cafeteria",, true);
                 AddButton(ButtonLoc("Male_SprinklerOff"), "CP Male_SprinklerOff",, true);
                 AddButton(ButtonLoc("Male_SprinklerOn"), "CP Male_SprinklerOn",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WCourtyard1:
                 AddButton(ButtonLoc("Courtyard_Start"), "CP Courtyard_Start", Vect2D(285, 165),, StartClip, EndClip);
@@ -706,7 +737,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Courtyard_Soldier1"), "CP Courtyard_Soldier1",, true);
                 AddButton(ButtonLoc("Courtyard_Soldier2"), "CP Courtyard_Soldier2",, true);
                 AddButton(ButtonLoc("Courtyard_FemaleWard"), "CP Courtyard_FemaleWard",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WFemaleWard:
                 AddButton(ButtonLoc("Female_Start"), "CP Female_Start", Vect2D(285, 165),, StartClip, EndClip);
@@ -724,7 +755,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Female_Chasedone"), "CP Female_Chasedone",, true);
                 AddButton(ButtonLoc("Female_Exit"), "CP Female_Exit",, true);
                 AddButton(ButtonLoc("Female_Jump"), "CP Female_Jump",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WAdmin2:
                 AddButton(ButtonLoc("Revisit_Soldier1"), "CP Revisit_Soldier1", Vect2D(285, 165),, StartClip, EndClip);
@@ -739,7 +770,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Revisit_PriestDead"), "CP Revisit_PriestDead",, true);
                 AddButton(ButtonLoc("Revisit_Soldier3"), "CP Revisit_Soldier3",, true);
                 AddButton(ButtonLoc("Revisit_ToLab"), "CP Revisit_ToLab",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WLab1:
                 AddButton(ButtonLoc("Lab_Start"), "CP Lab_Start", Vect2D(285, 165),, StartClip, EndClip);
@@ -757,13 +788,13 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Lab_BigTowerStairs"), "CP Lab_BigTowerStairs",, true);
                 AddButton(ButtonLoc("Lab_BigTowerMid"), "CP Lab_BigTowerMid",, true);
                 AddButton(ButtonLoc("Lab_BigTowerDone"), "CP Lab_BigTowerDone",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WLab2:
                 AddButton(ButtonLoc("DLC_Start"), "CP DLC_Start", Vect2D(285, 165),, StartClip, EndClip);
                 AddButton(ButtonLoc("DLC_Lab_Start"), "CP DLC_Lab_Start",, true);
                 AddButton(ButtonLoc("Lab_AfterExperiment"), "CP Lab_AfterExperiment",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WHospital:
                 AddButton(ButtonLoc("Hospital_Start"), "CP Hospital_Start", Vect2D(285, 165),, StartClip, EndClip);
@@ -789,7 +820,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Hospital_2ndFloor_GazOff"), "CP Hospital_2ndFloor_GazOff",, true);
                 AddButton(ButtonLoc("Hospital_2ndFloor_Labdone"), "CP Hospital_2ndFloor_Labdone",, true);
                 AddButton(ButtonLoc("Hospital_2ndFloor_Exit"), "CP Hospital_2ndFloor_Exit",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WCourtyard2:
                 AddButton(ButtonLoc("Courtyard1_Start"), "CP Courtyard1_Start", Vect2D(285, 165),, StartClip, EndClip);
@@ -797,7 +828,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Courtyard1_DupontIntro"), "CP Courtyard1_DupontIntro",, true);
                 AddButton(ButtonLoc("Courtyard1_Basketball"), "CP Courtyard1_Basketball",, true);
                 AddButton(ButtonLoc("Courtyard1_SecurityTower"), "CP Courtyard1_SecurityTower",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WPrison2:
                 AddButton(ButtonLoc("PrisonRevisit_Start"), "CP PrisonRevisit_Start", Vect2D(285, 165),, StartClip, EndClip);
@@ -805,7 +836,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("PrisonRevisit_Priest"), "CP PrisonRevisit_Priest",, true);
                 AddButton(ButtonLoc("PrisonRevisit_Tochase"), "CP PrisonRevisit_Tochase",, true);
                 AddButton(ButtonLoc("PrisonRevisit_Chase"), "CP PrisonRevisit_Chase",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WCourtyard3:
                 AddButton(ButtonLoc("Courtyard2_Start"), "CP Courtyard2_Start", Vect2D(285, 165),, StartClip, EndClip);
@@ -815,7 +846,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Courtyard2_ToWaterTower"), "CP Courtyard2_ToWaterTower",, true);
                 AddButton(ButtonLoc("Courtyard2_WaterTower"), "CP Courtyard2_WaterTower",, true);
                 AddButton(ButtonLoc("Courtyard2_TopWaterTower"), "CP Courtyard2_TopWaterTower",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WVocational:
                 AddButton(ButtonLoc("Building2_Start"), "CP Building2_Start", Vect2D(285, 165),, StartClip, EndClip);
@@ -837,21 +868,24 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Building2_Floor1_5"), "CP Building2_Floor1_5",, true);
                 AddButton(ButtonLoc("Building2_Floor1_5b"), "CP Building2_Floor1_5b",, true);
                 AddButton(ButtonLoc("Building2_Floor1_6"), "CP Building2_Floor1_6",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WExit:
                 AddButton(ButtonLoc("MaleRevisit_Start"), "CP MaleRevisit_Start", Vect2D(285, 165),, StartClip, EndClip);
                 AddButton(ButtonLoc("AdminBlock_Start"), "CP AdminBlock_Start",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WChapters NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             
             case WDoors:
                 AddButton(ButtonLoc("DoorsState") @ DoorLockState, "ToggleDoorState" @ RussianBool(bForceFuncs), Vect2D(285, 165),, StartClip, EndClip);
                 AddButton(ButtonLoc("DeleteAllDoors") @ Controller.DoorDelState, "ToggleDoorDelete" @ RussianBool(bForceFuncs) @ "true",, true);
+                AddButton(ButtonLoc("BashDoor"), "BashDoor",, true);
+                AddButton(ButtonLoc("BreakDoor"), "BreakDoor",, true);
+                AddButton(ButtonLoc("TriggerDoor"), "TriggerDoor ",, true,,, true);
                 AddButton(ButtonLoc("DoorsType") @ DoorTypeState, "ToggleDoorType" @ RussianBool(bForceFuncs),, true);
                 AddButton(ButtonLoc("DoorsMeshType"), "SetMenu WDoorsMT NothingFuncs",, true);
                 AddButton(ButtonLoc("Force") @ bForceFuncs, "ToggleForceFuncs",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu World WorldFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu World WorldFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WDoorsMT:
                 AddButton(ButtonLoc("Wooden"), "ChangeDoorMeshType Wooden" @ SndDoorMat, Vect2D(285, 165),, StartClip, EndClip);
@@ -878,7 +912,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Glass"), "ChangeDoorMeshType Glass" @ SndDoorMat,, true);
                 AddButton(ButtonLoc("Fence"), "ChangeDoorMeshType Fence" @ SndDoorMat,, true);
                 AddButton(ButtonLoc("ChangeDoorSndMat"), "SetMenu WDoorsMTMS NothingFuncs",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WDoors DoorsFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WDoors DoorsFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case WDoorsMTMS:
                 AddButton(ButtonLoc("WoodSndMat"), "ToggleChangeDoorSndMat Wood", Vect2D(285, 165),, StartClip, EndClip);
@@ -886,7 +920,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("MetalSndMat"), "ToggleChangeDoorSndMat Metal",, true);
                 AddButton(ButtonLoc("SecuritySndMat"), "ToggleChangeDoorSndMat SecurityDoor",, true);
                 AddButton(ButtonLoc("PrisonSndMat"), "ToggleChangeDoorSndMat BigPrisonDoor",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu WDoorsMT NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu WDoorsMT NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case Other:
                 AddButton(ButtonLoc("FinishGame"), "FinishGame ", Vect2D(285, 165),, StartClip, EndClip, true);
@@ -898,8 +932,10 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("KAActor"), "KAActor",, true);
                 AddButton(ButtonLoc("Wernicke") @ WernickeToggle, "ToggleWernicke",, true);
                 AddButton(ButtonLoc("NFS") @ NFSToggle, "ToggleNFS",, true);
+                AddButton(ButtonLoc("ToggleFestival") @ Controller.bFestival, "ToggleFestival",, true);
+                AddButton(ButtonLoc("ToggleEightMarch") @ Controller.bEightMarch, "ToggleEightMarch",, true);
                 AddButton(ButtonLoc("TimersMenu"), "SetMenu OTimers NothingFuncs",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case OTimers:
                 AddButton(ButtonLoc("ToggleRandLightColor"), "ToggleRandLightColor" @ TimersTime @ RussianBool(TimersStop), Vect2D(285, 165),, StartClip, EndClip);
@@ -909,7 +945,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("TimersStop") @ TimersStop, "ToggleTimersStop",, true);
                 AddButton(ButtonLoc("TimersCustomFrom"), "TimerFrom ",, true,,, true);
                 AddButton(ButtonLoc("TimersCustomStop"), "TimerStop",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Other OtherFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Other OtherFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case Add:
                 AddButton(ButtonLoc("Light"), "SetMenu AddL AddLightFuncs", Vect2D(285, 165),, StartClip, EndClip);
@@ -918,12 +954,12 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("AddPlayer"), "SetMenu AddPlayer AddPlayerFuncs",, true);
                 AddButton(ButtonLoc("PickableObjects"), "SetMenu AddPO NothingFuncs",, true);
                 AddButton(ButtonLoc("ClassAdd"), "Summon ",, true,,, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs",Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs",Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case AddE:
                 AddButton(ButtonLoc("SpawnEnemy"), "SetMenu AddESpawn NothingFuncs", Vect2D(285, 165),, StartClip, EndClip);
                 AddButton(ButtonLoc("RemoveAllEnemies"), "KillEnemy",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Add AddFuncs",Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Add AddFuncs",Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case AddESpawn:
                 AddButton(ButtonLoc("ChrisWalker"), "SpawnEnemy Soldier" @ SpawnEnemyCount @ HudWeaponToUse @ RussianBool(HudShouldAttack), Vect2D(285, 165),, StartClip, EndClip);
@@ -937,7 +973,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Count") @ SpawnEnemyCount, "ToggleSpawnEnemyCount ",, true,,, true);
                 AddButton(ButtonLoc("WeaponForEnemy") @ Localize("Buttons", HudWeaponToUse, "Picker"), "SetMenu AddESpawnWeapons",, true);
                 AddButton(ButtonLoc("EnemyShouldAttack") @ HudShouldAttack, "ToggleEnemyShouldAttack",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu AddE AddEnemyFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu AddE AddEnemyFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case AddESpawnPatient:
                 AddButton(ButtonLoc("SimpleNormal"), "SpawnEnemy Patient_SimpleNormal" @ SpawnEnemyCount @ HudWeaponToUse @ RussianBool(HudShouldAttack), Vect2D(285, 165),, StartClip, EndClip);
@@ -986,7 +1022,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Dupont2"), "SpawnEnemy Patient_Dupont2" @ SpawnEnemyCount @ HudWeaponToUse @ RussianBool(HudShouldAttack),, true);
                 AddButton(ButtonLoc("PyroManic"), "SpawnEnemy Patient_PyroManic" @ SpawnEnemyCount @ HudWeaponToUse @ RussianBool(HudShouldAttack),, true);
                 AddButton(ButtonLoc("RapeVictim"), "SpawnEnemy Patient_RapeVictim" @ SpawnEnemyCount @ HudWeaponToUse @ RussianBool(HudShouldAttack),, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu AddESpawn NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu AddESpawn NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case AddESpawnWeapons:
                 AddButton(ButtonLoc("Weapon_None"), "ToggleWeaponForEnemy Weapon_None", Vect2D(285, 165),, StartClip, EndClip);
@@ -998,7 +1034,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Weapon_Pipe"), "ToggleWeaponForEnemy Weapon_Pipe",, true);
                 AddButton(ButtonLoc("Weapon_WoodPlank"), "ToggleWeaponForEnemy Weapon_WoodPlank",, true);
                 AddButton(ButtonLoc("Weapon_CannibalDrill"), "ToggleWeaponForEnemy Weapon_CannibalDrill",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu AddESpawn NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu AddESpawn NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case AddL:
                 AddButton(ButtonLoc("AddPointLight"), "MadeLight ", Vect2D(285, 165),, StartClip, EndClip, true);
@@ -1006,13 +1042,13 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("AddDominantDirectionalLight"), "MadeDom ",, true,,, true);
                 AddButton(ButtonLoc("RemoveAllLights"), "RemoveAllPickerLights",, true);
                 AddButton(ButtonLoc("AddStalkerPointLight") @ Controller.bFollowLight, "MadeFollowLight ",, true,,, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Add AddFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Add AddFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case AddP:
                 AddButton(ButtonLoc("SpawnProp"), "SpawnProp ", Vect2D(285, 165),, StartClip, EndClip, true);
                 AddButton(ButtonLoc("ChangeProp"), "ChangeProp ",, true,,, true);
                 AddButton(ButtonLoc("DeleteProp"), "DeleteProp ",, true,,, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Add AddFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Add AddFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case AddPlayer:
                 AddButton(ButtonLoc("SpawnHero"), "SpawnHero " @ RussianBool(bPossessSpawnHero), Vect2D(285, 165),, StartClip, EndClip);
@@ -1021,7 +1057,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("SetTargetHero"), "SetTargetHero ",, true,,, true);
                 AddButton(ButtonLoc("TogglePossessSpawnHero") @ bPossessSpawnHero, "TogglePossessSpawnHero",, true);
                 AddButton(ButtonLoc("TogglePossessAfterKill") @ bPossessAfterKill, "TogglePossessAfterKill",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Add AddFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Add AddFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case AddPO:
                 AddButton(ButtonLoc("GPI_SecurityKeycard"), "GiveItem Keycard", Vect2D(285, 165),, StartClip, EndClip);
@@ -1038,7 +1074,15 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("GPI_LabKeyNotUsed"), "GiveItem Keycard_Lab",, true);
                 AddButton(ButtonLoc("GPI_DLC_HandCuffKey"), "GiveItem HandcuffKey",, true);
                 AddButton(ButtonLoc("GPI_DLC_MaleWardKey"), "GiveItem KeyMale",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Add AddFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Add AddFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
+                break;
+            case Cinematic:
+                AddButton(ButtonLoc("Fixedcam") @ Controller.bDebugFixedCam, "ToggleFixedcam", Vect2D(285, 165),, StartClip, EndClip);
+                AddButton(ButtonLoc("Freecam") @ Controller.bDebugFreeCam, "ToggleFreecam",, true);
+                AddButton(ButtonLoc("HideHud") @ bCinematicMode, "ToggleCinematicMode",, true);
+                AddButton(ButtonLoc("FreecamSpeed") @ Controller.fDebugSpeed, "FreecamSpeed ",, true,,, true);
+                AddButton(ButtonLoc("DisableGrain") @ Controller.bGrainDisabled, "ToggleGrain",, true);
+                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case Settings:
                 AddButton(ButtonLoc("ButtonSound") @ !DisableClickSound, "ToggleClickButton", Vect2D(285, 165),, StartClip, EndClip);
@@ -1049,19 +1093,78 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("ShowMessages") @ !DisablePickerMessages, "TogglePickerMessages",, true);
                 AddButton(ButtonLoc("MenuMusic") @ !DisableMenuMusic, "ToggleMenuMusic",, true);
                 AddButton(ButtonLoc("ButtonDescs") @ !DisableButtonDescs, "ToggleButtonDescs",, true);
+                AddButton(ButtonLoc("SettingsColor"), "SetMenu SettingsColor NothingFuncs",, true);
                 AddButton(ButtonLoc("Author") @ Localize("Other", "Discord", "Picker"), "CopyDiscordAbout",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
+                break;
+            case SettingsColor:
+                AddButton(ButtonLoc("ConsoleTextColorRed") @ ConsoleTextColor.Red, "ChangeColorTheme ConsoleTextColor R", Vect2D(285, 165),, StartClip, EndClip);
+                AddButton(ButtonLoc("ConsoleTextColorGreen") @ ConsoleTextColor.Green, "ChangeColorTheme ConsoleTextColor G",, true);
+                AddButton(ButtonLoc("ConsoleTextColorBlue") @ ConsoleTextColor.Blue, "ChangeColorTheme ConsoleTextColor B",, true);
+                AddButton(ButtonLoc("ConsoleTextColorAlpha") @ ConsoleTextColor.Alpha, "ChangeColorTheme ConsoleTextColor A",, true);
+
+                AddButton(ButtonLoc("ConsoleColorRed") @ ConsoleColor.Red, "ChangeColorTheme ConsoleColor R",, true);
+                AddButton(ButtonLoc("ConsoleColorGreen") @ ConsoleColor.Green, "ChangeColorTheme ConsoleColor G",, true);
+                AddButton(ButtonLoc("ConsoleColorBlue") @ ConsoleColor.Blue, "ChangeColorTheme ConsoleColor B",, true);
+                AddButton(ButtonLoc("ConsoleColorAlpha") @ ConsoleColor.Alpha, "ChangeColorTheme ConsoleColor A",, true);
+
+                AddButton(ButtonLoc("PromptTextColorRed") @ PromptTextColor.Red, "ChangeColorTheme PromptTextColor R",, true);
+                AddButton(ButtonLoc("PromptTextColorGreen") @ PromptTextColor.Green, "ChangeColorTheme PromptTextColor G",, true);
+                AddButton(ButtonLoc("PromptTextColorBlue") @ PromptTextColor.Blue, "ChangeColorTheme PromptTextColor B",, true);
+                AddButton(ButtonLoc("PromptTextColorAlpha") @ PromptTextColor.Alpha, "ChangeColorTheme PromptTextColor A",, true);
+
+                AddButton(ButtonLoc("BackgroundColorRed") @ BackgroundColor.Red, "ChangeColorTheme BackgroundColor R",, true);
+                AddButton(ButtonLoc("BackgroundColorGreen") @ BackgroundColor.Green, "ChangeColorTheme BackgroundColor G",, true);
+                AddButton(ButtonLoc("BackgroundColorBlue") @ BackgroundColor.Blue, "ChangeColorTheme BackgroundColor B",, true);
+                AddButton(ButtonLoc("BackgroundColorAlpha") @ BackgroundColor.Alpha, "ChangeColorTheme BackgroundColor A",, true);
+
+                AddButton(ButtonLoc("ButtonTextColorRed") @ ButtonTextColor.Red, "ChangeColorTheme ButtonTextColor R",, true);
+                AddButton(ButtonLoc("ButtonTextColorGreen") @ ButtonTextColor.Green, "ChangeColorTheme ButtonTextColor G",, true);
+                AddButton(ButtonLoc("ButtonTextColorBlue") @ ButtonTextColor.Blue, "ChangeColorTheme ButtonTextColor B",, true);
+                AddButton(ButtonLoc("ButtonTextColorAlpha") @ ButtonTextColor.Alpha, "ChangeColorTheme ButtonTextColor A",, true);
+
+                AddButton(ButtonLoc("ButtonColorRed") @ ButtonColor.Red, "ChangeColorTheme ButtonColor R",, true);
+                AddButton(ButtonLoc("ButtonColorGreen") @ ButtonColor.Green, "ChangeColorTheme ButtonColor G",, true);
+                AddButton(ButtonLoc("ButtonColorBlue") @ ButtonColor.Blue, "ChangeColorTheme ButtonColor B",, true);
+                AddButton(ButtonLoc("ButtonColorAlpha") @ ButtonColor.Alpha, "ChangeColorTheme ButtonColor A",, true);
+
+                AddButton(ButtonLoc("ReturnButtonTextColorRed") @ ReturnButtonTextColor.Red, "ChangeColorTheme ReturnButtonTextColor R",, true);
+                AddButton(ButtonLoc("ReturnButtonTextColorGreen") @ ReturnButtonTextColor.Green, "ChangeColorTheme ReturnButtonTextColor G",, true);
+                AddButton(ButtonLoc("ReturnButtonTextColorBlue") @ ReturnButtonTextColor.Blue, "ChangeColorTheme ReturnButtonTextColor B",, true);
+                AddButton(ButtonLoc("ReturnButtonTextColorAlpha") @ ReturnButtonTextColor.Alpha, "ChangeColorTheme ReturnButtonTextColor A",, true);
+
+                AddButton(ButtonLoc("ReturnButtonColorRed") @ ReturnButtonColor.Red, "ChangeColorTheme ReturnButtonColor R",, true);
+                AddButton(ButtonLoc("ReturnButtonColorGreen") @ ReturnButtonColor.Green, "ChangeColorTheme ReturnButtonColor G",, true);
+                AddButton(ButtonLoc("ReturnButtonColorBlue") @ ReturnButtonColor.Blue, "ChangeColorTheme ReturnButtonColor B",, true);
+                AddButton(ButtonLoc("ReturnButtonColorAlpha") @ ReturnButtonColor.Alpha, "ChangeColorTheme ReturnButtonColor A",, true);
+
+                AddButton(ButtonLoc("RangeButtonColorRed") @ RangeButtonColor.Red, "ChangeColorTheme RangeButtonColor R",, true);
+                AddButton(ButtonLoc("RangeButtonColorGreen") @ RangeButtonColor.Green, "ChangeColorTheme RangeButtonColor G",, true);
+                AddButton(ButtonLoc("RangeButtonColorBlue") @ RangeButtonColor.Blue, "ChangeColorTheme RangeButtonColor B",, true);
+                AddButton(ButtonLoc("RangeButtonColorAlpha") @ RangeButtonColor.Alpha, "ChangeColorTheme RangeButtonColor A",, true);
+
+                AddButton(ButtonLoc("RangeButtonTextColorRed") @ RangeButtonTextColor.Red, "ChangeColorTheme RangeButtonTextColor R",, true);
+                AddButton(ButtonLoc("RangeButtonTextColorGreen") @ RangeButtonTextColor.Green, "ChangeColorTheme RangeButtonTextColor G",, true);
+                AddButton(ButtonLoc("RangeButtonTextColorBlue") @ RangeButtonTextColor.Blue, "ChangeColorTheme RangeButtonTextColor B",, true);
+                AddButton(ButtonLoc("RangeButtonTextColorAlpha") @RangeButtonTextColor.Alpha, "ChangeColorTheme RangeButtonTextColor A",, true);
+
+                AddButton(ButtonLoc("RangeReturnButtonColorRed") @ RangeReturnButtonColor.Red, "ChangeColorTheme RangeReturnButtonColor R",, true);
+                AddButton(ButtonLoc("RangeReturnButtonColorGreen") @ RangeReturnButtonColor.Green, "ChangeColorTheme RangeReturnButtonColor G",, true);
+                AddButton(ButtonLoc("RangeReturnButtonColorBlue") @ RangeReturnButtonColor.Blue, "ChangeColorTheme RangeReturnButtonColor B",, true);
+                AddButton(ButtonLoc("RangeReturnButtonColorAlpha") @ RangeReturnButtonColor.Alpha, "ChangeColorTheme RangeReturnButtonColor A",, true);
+
+                AddButton(ButtonLoc("GoBack"), "SetMenu Settings NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case RandomizerChoice:
                 AddButton(ButtonLoc("StartRandomizer"), "ToggleRandomizer", Vect2D(285, 165),, StartClip, EndClip);
                 AddButton(ButtonLoc("ChallengeMode") @ Controller.RandomizerChallengeMode, "ModifyRandomizer 0" @ RussianBool(!Controller.RandomizerChallengeMode),, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Other OtherFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Other OtherFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case InsaneChoice:
                 AddButton(ButtonLoc("StartInsanePlus"), "ToggleInsanePlus ", Vect2D(285, 165),, StartClip, EndClip, Controller.TrainingMode);
                 AddButton(ButtonLoc("DisableCamera") @ Controller.DisCamMode, "ModifyInsanePlus 0",, true);
                 AddButton(ButtonLoc("TrainingMode") @ Controller.TrainingMode, "ModifyInsanePlus 1",, true);
-                AddButton(ButtonLoc("GoBack"), "SetMenu Other OtherFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("GoBack"), "SetMenu Other OtherFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
         }
     }
     else if(Controller.InsanePlusState) {
@@ -1069,7 +1172,7 @@ Event ShowPickerMenu() {
             case DisInsanePlus:
                 AddButton(ButtonLoc("DisableInsanePlus"), "ToggleInsanePlus", Vect2D(285, 165),, StartClip, EndClip);
                 AddButton(ButtonLoc("IWantToDie"), "DS 99999",, true);
-                AddButton(ButtonLoc("Close"), "TogglePickerMenu false", Vect2D(945, 620), false,,,,, MakeRGBA(226, 68, 61, 225), MakeRGBA(180, 147, 145, 225), MakeRGBA(255, 255, 255, 255));
+                AddButton(ButtonLoc("Close"), "TogglePickerMenu false", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
         }
     }
@@ -1346,27 +1449,38 @@ Function DrawString(String String, Vector2D Loc, optional RGBA Color=MakeRGBA(20
     Canvas.DrawText(String, false, MisScale.X, MisScale.Y);
 }
 
-Function DrawConsoleString(String String, Vector2D Loc, optional RGBA Color=MakeRGBA(200, 200, 200, 200), optional Vector2D Scale=Vect2D(1.5, 1.5), optional Bool ScaleLoc=true, optional Bool center) {
-    local Vector2D MisScale, StringScale, StringLoc;
+Function DrawConsoleString(String String, Vector2D Loc, optional RGBA Color=MakeRGBA(200, 200, 200, 200), optional Vector2D Scale=Vect2D(2, 2), optional Bool ScaleLoc=true, optional Bool center) {
+    local Vector2D MisScale, StringScale, StringLoc, ViewportSize;
     local Float XL, YL, Y, info_xl, info_yl;
     local PickerInput PlayerInput;
+    local PickerController Controller;
     local String OutStr, Cursor;
     local Int MatchIdx, Idx, StartIdx;
 
+    Controller = PickerController(PlayerOwner);
+    if(Controller != None) {
+        Controller.ViewportCurrentSize = ViewportSize;
+        StringScale.X = ViewportSize.X;
+        StringScale.Y = ViewportSize.Y;
+    }
+    else {
+        StringScale.X = 1920;
+        StringScale.Y = 1080;
+    }
     PlayerInput = PickerInput(PlayerOwner.PlayerInput);
     Cursor = "_";
-    MisScale=Vect2D(2,2);
+    MisScale = Vect2D((1.3) / Canvas.SizeX * Canvas.SizeX, (1.3) / Canvas.SizeY * Canvas.SizeY);
     Loc = Vect2D(Loc.X / 1920 * Canvas.SizeX, Loc.Y / 1080 * Canvas.SizeY);
 
     Canvas.SetPos(Loc.X+1, Loc.Y+1.3);
     Canvas.Font = Font'PickerDebugMenu.PickerFont';
     Canvas.SetDrawColor(0, 0, 0, Color.Alpha);
-    Canvas.DrawText(String, false, 1.3, 1.3);
+    Canvas.DrawText(String, false, MisScale.X, MisScale.Y);
 
     Canvas.SetPos(Loc.X, Loc.Y);
     Canvas.Font = Font'PickerDebugMenu.PickerFont';
     Canvas.SetDrawColor(Color.Red, Color.Blue, Color.Green, Color.Alpha);
-    Canvas.DrawText(String, false, 1.3, 1.3);
+    Canvas.DrawText(String, false, MisScale.X, MisScale.Y);
  
     OutStr = ">" @ Left(Command, PlayerInput.CommandPos);
 
@@ -1374,13 +1488,13 @@ Function DrawConsoleString(String String, Vector2D Loc, optional RGBA Color=Make
     Canvas.SetPos(Loc.X+1 + (XL*1.3), Loc.Y+1.3);
     Canvas.Font = Font'PickerDebugMenu.PickerFont';
     Canvas.SetDrawColor(0, 0, 0, Color.Alpha);
-    Canvas.DrawText(Cursor, false, 1.3, 1.3);
+    Canvas.DrawText(Cursor, false, MisScale.X, MisScale.Y); //1.3, 1.3
 
     Canvas.StrLen(OutStr, XL, YL);
     Canvas.SetPos(Loc.X + (XL*1.3), Loc.Y);
     Canvas.Font = Font'PickerDebugMenu.PickerFont';
     Canvas.SetDrawColor(Color.Red, Color.Blue, Color.Green, Color.Alpha);
-    Canvas.DrawText(Cursor, false, 1.3, 1.3);
+    Canvas.DrawText(Cursor, false, MisScale.X, MisScale.Y);
 }
 
 Function Bool ContainsName(Array<Name> Array, Name find) {
@@ -1435,9 +1549,21 @@ Exec Function SetMenu(Menu Menu, optional String ButtonTag) {
     ButtonDesc=ButtonTag;
 }
 
-Function AddButton(String Name, String ConsoleCommand, optional Vector2D Location, optional Bool AutoDown=false, optional Vector2D Bound_Start, optional Vector2D Bound_End, optional Bool Template, optional String buttontag, optional RGBA Color=MakeRGBA(35,35,38,200), optional RGBA RangeColor=MakeRGBA(255,255,255,200), optional RGBA StringColor=MakeRGBA(255,255,255,255)) {
+Function AddButton(
+            String Name,
+            String ConsoleCommand,
+            optional Vector2D Location,
+            optional Bool AutoDown=false,
+            optional Vector2D Bound_Start,
+            optional Vector2D Bound_End,
+            optional Bool Template,
+            optional String buttontag,
+            optional RGBA Color=MakeRGBA(ButtonColor.Red,ButtonColor.Green,ButtonColor.Blue,ButtonColor.Alpha),
+            optional RGBA RangeColor=MakeRGBA(RangeButtonColor.Red,RangeButtonColor.Green,RangeButtonColor.Blue,RangeButtonColor.Alpha),
+            optional RGBA StringColor=MakeRGBA(RangeButtonTextColor.Red,RangeButtonTextColor.Green,RangeButtonTextColor.Blue,RangeButtonTextColor.Alpha)
+) {
     local Vector2D Begin_PointCalc, End_PointCalc, Offset, Center_Vector, TextSize;
-    local RGBA ButtonColor;
+    local RGBA ButColor;
     local ButtonStr ButtonBase, PreviousButton, FirstButtonInRow, ButtonInColumn;
     local int Row, Column;
 
@@ -1479,15 +1605,15 @@ Function AddButton(String Name, String ConsoleCommand, optional Vector2D Locatio
         }
     }
     if(MouseInbetween(Scale2DVector(Location), Scale2DVector(Location + Offset))) {
-        ButtonColor = RangeColor;
-        StringColor = MakeRGBA(150, 150, 150, 255);
+        ButColor = RangeColor;
+        StringColor = MakeRGBA(RangeButtonTextColor.Red, RangeButtonTextColor.Green, RangeButtonTextColor.Blue, RangeButtonTextColor.Alpha); // MakeRGBA(150, 150, 150, 255);
         DrawString(buttontag, Vect2D(1375,140), MakeRGBA(255, 255, 255, 255));
     }
     else {
-        ButtonColor=Color;
-        StringColor = MakeRGBA(255, 255, 255, 255);
+        ButColor=Color;
+        StringColor = MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha);
     }
-    DrawBox(Location, Offset, ButtonColor, Begin_PointCalc, End_PointCalc);
+    DrawBox(Location, Offset, ButColor, Begin_PointCalc, End_PointCalc);
     Center_Vector = Vect2D((Begin_PointCalc.X + (Begin_PointCalc.X + End_PointCalc.X)) / 2, (Begin_PointCalc.Y + (Begin_PointCalc.Y + End_PointCalc.Y)) / 2);
     DrawString(Name, Center_Vector, StringColor, Vect2D(1.8, 1.8), false, true);
     ButtonBase.Name = Name;
@@ -1521,7 +1647,253 @@ Function DrawTextInWorld(String Text, Vector location, Float Max_View_Distance, 
     }
 }
 
-Function Click() {
+Exec Function ChangeColorTheme(Name Element, Name Channel, Bool Increase) {
+    local PickerInput PickerInput;
+    local Int I;
+
+    PickerInput = PickerInput(PlayerOwner.PlayerInput);
+    I = 0;
+     if(Increase) {
+        if(PickerInput.bShiftPressed) {
+            I += 5;
+        }
+        else {
+            ++I;
+        }
+     }
+     else {
+        if(PickerInput.bShiftPressed) {
+            I -= 5;
+        }
+        else {
+            --I;
+        }
+     }
+    Switch(Element) {
+        case 'ConsoleTextColor':
+            Switch(Channel) {
+                case 'R':
+                    ConsoleTextColor.Red += I;
+                    SaveConfig();
+                    break;
+                case 'G':
+                    ConsoleTextColor.Green += I;
+                    SaveConfig();
+                    break;
+                case 'B':
+                    ConsoleTextColor.Blue += I;
+                    SaveConfig();
+                    break;
+                case 'A':
+                    ConsoleTextColor.Alpha += I;
+                    SaveConfig();
+                    break;
+            }
+            break;
+        case 'ConsoleColor':
+            Switch(Channel) {
+                case 'R':
+                    ConsoleColor.Red += I;
+                    SaveConfig();
+                    break;
+                case 'G':
+                    ConsoleColor.Green += I;
+                    SaveConfig();
+                    break;
+                case 'B':
+                    ConsoleColor.Blue += I;
+                    SaveConfig();
+                    break;
+                case 'A':
+                    ConsoleColor.Alpha += I;
+                    SaveConfig();
+                    break;
+            }
+            break;
+        case 'PromptTextColor':
+            Switch(Channel) {
+                case 'R':
+                    PromptTextColor.Red += I;
+                    SaveConfig();
+                    break;
+                case 'G':
+                    PromptTextColor.Green += I;
+                    SaveConfig();
+                    break;
+                case 'B':
+                    PromptTextColor.Blue += I;
+                    SaveConfig();
+                    break;
+                case 'A':
+                    PromptTextColor.Alpha += I;
+                    SaveConfig();
+                    break;
+            }
+            break;
+        case 'BackgroundColor':
+            Switch(Channel) {
+                case 'R':
+                     BackgroundColor.Red += I;
+                     SaveConfig();
+                    break;
+                case 'G':
+                     BackgroundColor.Green += I;
+                     SaveConfig();
+                    break;
+                case 'B':
+                     BackgroundColor.Blue += I;
+                     SaveConfig();
+                    break;
+                case 'A':
+                     BackgroundColor.Alpha += I;
+                     SaveConfig();
+                    break;
+            }
+            break;
+        case 'ButtonTextColor':
+            Switch(Channel) {
+                case 'R':
+                    ButtonTextColor.Red += I;
+                    SaveConfig();
+                    break;
+                case 'G':
+                    ButtonTextColor.Green += I;
+                    SaveConfig();
+                    break;
+                case 'B':
+                    ButtonTextColor.Blue += I;
+                    SaveConfig();
+                    break;
+                case 'A':
+                    ButtonTextColor.Alpha += I;
+                    SaveConfig();
+                    break;
+            }
+            break;
+        case 'ButtonColor':
+            Switch(Channel) {
+                case 'R':
+                    ButtonColor.Red += I;
+                    SaveConfig();
+                    break;
+                case 'G':
+                    ButtonColor.Green += I;
+                    SaveConfig();
+                    break;
+                case 'B':
+                    ButtonColor.Blue += I;
+                    SaveConfig();
+                    break;
+                case 'A':
+                    ButtonColor.Alpha += I;
+                    SaveConfig();
+                    break;
+            }
+            break;
+        case 'ReturnButtonTextColor':
+            Switch(Channel) {
+                case 'R':
+                    ReturnButtonTextColor.Red += I;
+                    SaveConfig();
+                    break;
+                case 'G':
+                    ReturnButtonTextColor.Green += I;
+                    SaveConfig();
+                    break;
+                case 'B':
+                    ReturnButtonTextColor.Blue += I;
+                    SaveConfig();
+                    break;
+                case 'A':
+                    ReturnButtonTextColor.Alpha += I;
+                    SaveConfig();
+                    break;
+            }
+            break;
+        case 'ReturnButtonColor':
+            Switch(Channel) {
+                case 'R':
+                   ReturnButtonColor.Red += I;
+                   SaveConfig();
+                    break;
+                case 'G':
+                    ReturnButtonColor.Green += I;
+                    SaveConfig();
+                    break;
+                case 'B':
+                   ReturnButtonColor.Blue += I;
+                   SaveConfig();
+                    break;
+                case 'A':
+                    ReturnButtonColor.Alpha += I;
+                    SaveConfig();
+                    break;
+            }
+            break;
+        case 'RangeReturnButtonColor':
+            Switch(Channel) {
+                case 'R':
+                   RangeReturnButtonColor.Red += I;
+                   SaveConfig();
+                    break;
+                case 'G':
+                    RangeReturnButtonColor.Green += I;
+                    SaveConfig();
+                    break;
+                case 'B':
+                   RangeReturnButtonColor.Blue += I;
+                   SaveConfig();
+                    break;
+                case 'A':
+                    RangeReturnButtonColor.Alpha += I;
+                    SaveConfig();
+                    break;
+            }
+            break;
+        case 'RangeButtonColor':
+            Switch(Channel) {
+                case 'R':
+                   RangeButtonColor.Red += I;
+                   SaveConfig();
+                    break;
+                case 'G':
+                    RangeButtonColor.Green += I;
+                    SaveConfig();
+                    break;
+                case 'B':
+                   RangeButtonColor.Blue += I;
+                   SaveConfig();
+                    break;
+                case 'A':
+                    RangeButtonColor.Alpha += I;
+                    SaveConfig();
+                    break;
+            }
+            break;
+        case 'RangeButtonTextColor':
+            Switch(Channel) {
+                case 'R':
+                   RangeButtonTextColor.Red += I;
+                   SaveConfig();
+                    break;
+                case 'G':
+                    RangeButtonTextColor.Green += I;
+                    SaveConfig();
+                    break;
+                case 'B':
+                   RangeButtonTextColor.Blue += I;
+                   SaveConfig();
+                    break;
+                case 'A':
+                    RangeButtonTextColor.Alpha += I;
+                    SaveConfig();
+                    break;
+            }
+            break;
+    }
+}
+
+Function Click(Int Type=0) {
     local PickerInput PlayerInput;
     local PickerController Controller;
     local ButtonStr ButtonStr;
@@ -1532,16 +1904,37 @@ Function Click() {
     MousePos = PlayerInput.MousePos;
     Foreach Buttons(ButtonStr) {
         if(InRange(MousePos.X, ButtonStr.Start_Points.X, ButtonStr.End_Point.X) && InRange(MousePos.Y, ButtonStr.Start_Points.Y, ButtonStr.End_Point.Y)) {
-            if(!DisableClickSound) {
-                PlaySound(Controller.ButtonSound);
+            if(CurrentMenu == SettingsColor) {
+                if(Type == 1) {
+                    ButtonStr.ConsoleCommand $= " true";
+                    PlayerOwner.ConsoleCommand(ButtonStr.ConsoleCommand);
+                    return;
+                }
+                else if(Type == 2) {
+                    ButtonStr.ConsoleCommand $= " false";
+                    PlayerOwner.ConsoleCommand(ButtonStr.ConsoleCommand);
+                    return;
+                }
+                else if(Type == 0 && ButtonStr.ConsoleCommand == "SetMenu Settings NothingFuncs") {
+                    if(!DisableClickSound) {
+                        PlaySound(Controller.ButtonSound);
+                    }
+                    PlayerOwner.ConsoleCommand(ButtonStr.ConsoleCommand);
+                    return;
+                }
             }
-            if(ButtonStr.Template) {
-                Command=ButtonStr.ConsoleCommand;
-                PlayerInput.SetCursorPos(Len(Command));
+            else if(Type == 0) {
+                if(!DisableClickSound) {
+                    PlaySound(Controller.ButtonSound);
+                }
+                if(ButtonStr.Template) {
+                    Command=ButtonStr.ConsoleCommand;
+                    PlayerInput.SetCursorPos(Len(Command));
+                    return;
+                }
+                PlayerOwner.ConsoleCommand(ButtonStr.ConsoleCommand);
                 return;
             }
-            PlayerOwner.ConsoleCommand(ButtonStr.ConsoleCommand);
-            return;
         }
     }
     return;
@@ -1651,6 +2044,12 @@ Exec Function Back() {
         case Settings:
             Controller.ConsoleCommand("SetMenu Normal NothingFuncs");
             break;
+        case SettingsColor:
+            Controller.ConsoleCommand("SetMenu Settings NothingFuncs");
+            break;
+        case Cinematic:
+            Controller.ConsoleCommand("SetMenu Normal NothingFuncs");
+            break;
         case Player:
             Controller.ConsoleCommand("SetMenu Normal NothingFuncs");
             break;
@@ -1748,6 +2147,17 @@ Function RGBA MakeRGBA(Byte R, Byte G, Byte B, Byte A=255) {
     else {
         return RandRGBA(A);
     }
+}
+
+Function Color MakeLineColor(Byte R, Byte G, Byte B, Byte A=255) {
+    local Color Color;
+
+    Color.R=R;
+    Color.G=G;
+    Color.B=B;
+    Color.A=A;
+
+    return Color;
 }
 
 Function RGBA RandRGBA(Byte Alpha) {

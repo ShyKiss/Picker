@@ -237,6 +237,7 @@ simulated Event PlayFootStepSound(Int FootDown, AnimNotify_Footstep FootstepNoti
 Event RespawnHero() {
     local PickerGame Game;
     local OLEngine Engine;
+    local EmitterPool PickerPools;
     local Vector C;
     local Rotator Rot;
     local String CCP;
@@ -250,6 +251,11 @@ Event RespawnHero() {
     //Controller.UnPossess();
     //Controller.Possess(Hero, false);
     Controller.TogglePickerMenu(false);
+    Foreach AllActors(Class'EmitterPool', PickerPools) {
+        if(PickerPools.Tag == 'PppickerPool') {
+            PickerPools.Destroy();
+        }
+    }
     if(Controller.bAnimFree) {
         Controller.AnimFree();
     }
@@ -261,6 +267,9 @@ Event RespawnHero() {
     }
     if(Controller.bDebugGhost) {
         Controller.ToggleNoclip();
+    }
+    if(Controller.bDebugFixedCam) {
+        Controller.ToggleFixedcam();
     }
     if(!Controller.UsingFirstPersonCamera()) {
         Controller.ToggleFreecam();
