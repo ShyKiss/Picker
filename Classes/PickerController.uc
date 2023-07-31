@@ -1,6 +1,16 @@
 Class PickerController extends OLPlayerController
     Config(Picker);
 
+// Mouse event enum
+enum EMouseEvent
+{
+    LeftMouseButton,
+    RightMouseButton,
+    MiddleMouseButton,
+    ScrollWheelUp,
+    ScrollWheelDown,
+};
+
 var Float InsanePlusStamina, fPlayerAnimRate, fEnemyAnimRate, fDebugSpeed;
 var String CustomPM, CustomSEnemySkelMesh, CustomGEnemySkelMesh, CommandTimerFrom;
 var Vector vScalePlayer, vScaleEnemies, TeleportPosCoordsTemp;
@@ -19,13 +29,19 @@ var PickerPointLight PickerFollowLight;
 var Array<String> ArrayPatientTypes, ArrayPatientModel;
 var Private String CurrentAddCPGame;
 var Int MathTasksGlobalA, MathTasksGlobalB, MathTasksTempOperation;
-var Bool AIDebug, bScalePlayerVel, bGrainDisabled, bDebugFullyGhost, bThirdPersonMode, bEightMarch, bFestival, DoorLockState, DoorTypeState, DoorDelState, FreecamState, LightState, ChrisState, BoolKillEnemy, ForceKillEnemy,
+var Bool AIDebug, bCameraHudVisible, bScalePlayerVel, bGrainDisabled, bDebugFullyGhost, bThirdPersonMode, bEightMarch, bFestival, DoorLockState, DoorTypeState, DoorDelState, FreecamState, LightState, ChrisState, BoolKillEnemy, ForceKillEnemy,
 bDefaultPlayer, ForceDisAI, EverytimeLightState, bBhop, bAutoBunnyHop, bFlyMode, bResetTimer, bTimer, bDisAI, bAnimFree, bLMFree, bSMFree, bDark, GroomChrisState,
 SMRandomState, AllLoadedState, InsanePlusState, RandomizerState, LSMDamage, ResetJumpStam, RandomizerFR, MathTasksState, MathTasksTimer, bFollowLight, CrabGameState;
 var Float SmallRandomTime, MediumRandomTime, LargeRandomTime;
 var Config Bool DisCamMode, TrainingMode, AlwaysSaveCheckpoint, RandomizerChallengeMode;
 
 /************************************************FUNCTIONS************************************************/
+
+Exec Function ToggleCameraHud() {
+    bCameraHudVisible = !bCameraHudVisible;
+    PickerHud(HUD).CamcorderHUD.SetVisible(bCameraHudVisible);
+    PickerHud(HUD).CamcorderHUD.Objects.MainOpacity.SetVisible(bCameraHudVisible);
+}
 
 Exec Function ToggleScalePlayerVel() {
     bScalePlayerVel = !bScalePlayerVel;
@@ -68,7 +84,7 @@ Exec Function sds() {
     ConsoleCommand("TimerFrom 0.001 ThirdPersonTimer");
 }
 
-Exec Function ToggleThirdPerson(Bool Disable=false) {
+Exec Function ToggleThirdPerson(Bool Disable=false, optional Bool NoReload=false) {
     local Rotator Rot;
     local PickerInput Input;
     local Int Index, Index2;
@@ -117,7 +133,9 @@ Exec Function ToggleThirdPerson(Bool Disable=false) {
             PickerHero(Pawn).SpecialMoveParams[Index].GP.MaxPitchWS = PickerHero(Pawn).Default.SpecialMoveParams[Index2].GP.MaxPitchWS;
             ++Index2;
         }
-        Reload();
+        if(!NoReload) {
+            Reload();
+        }
     }
     else {
         bThirdPersonMode = true;
@@ -1130,9 +1148,11 @@ Exec Function ToggleInsanePlus(optional String CPD) {
 Function InsanePlus(optional String CPD) {
     local PickerGame CGame;
     local PickerHero Hero;
+    local OLUberPostProcessEffect Effect;
 
     CGame = PickerGame(WorldInfo.Game);
 	Hero = PickerHero(Pawn);
+    Effect = FXManager.CurrentUberPostEffect;
     if(!InsanePlusState) {
         ConsoleCommand("Set OLAnimBlendBySpeed MaxSpeed 400");
         Hero.bCameraCracked = false;
@@ -1141,6 +1161,7 @@ Function InsanePlus(optional String CPD) {
         Hero.NormalRunSpeed = 450;
         Hero.CrouchedSpeed = 75;
         Hero.BatteryDuration = 150;
+        Effect.GrainBrightness = Effect.Default.GrainBrightness;
         PickerHud(HUD).SetMenu(Normal);
         CGame.DifficultyMode = EDM_Normal;
         DisCamMode = Default.DisCamMode;
@@ -1212,10 +1233,13 @@ Function InsanePlus(optional String CPD) {
 
 Function InsanePlusMainFunc() {
     local PickerGame CGame;
+    local OLUberPostProcessEffect Effect;
 
     CGame = PickerGame(WorldInfo.Game);
+    Effect = FXManager.CurrentUberPostEffect;
     PickerHero(Pawn).BatteryDuration = 90;
     PickerHero(Pawn).bCameraCracked = true;
+    Effect.GrainBrightness = FMin(InsanePlusStamina / 100, 0.80);
     if(TrainingMode) {
         PickerHero(Pawn).DeathScreenDuration = 0;
     }
@@ -2020,6 +2044,7 @@ Function PlayerDied() {
     InventoryManager.ClearGameplayItems();
     InventoryManager.ClearUnsavedBatteries();
     TogglePickerMenu(false);
+    ToggleThirdPerson(true, true);
     CurrentObjective = 'None';
     if(bDefaultPlayer) {
         PickerHero(Pawn).Mesh.SetSkeletalMesh(Current_SkeletalMesh);
@@ -5200,6 +5225,7 @@ DefaultProperties
     MediumRandomTime = 15
     LargeRandomTime = 30
     OneBatteryMode = true
+    bCameraHudVisible = true
     FastEnemyMode = true
     DisCamMode = false
     OneShotMode = true

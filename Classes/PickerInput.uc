@@ -11,6 +11,12 @@ var Config Int HistoryTop, HistoryBot, HistoryCur;
 var Config String History[24];
 var Transient Bool bNavigatingHistory;
 
+var() globalconfig bool bUseHardwareCursor;
+var bool bForcedSoftwareCursor; // If Gamepad is used, we can't use the hardware cursor.
+
+var() globalconfig float ControlStickSensitivityHor;
+var() globalconfig float ControlStickSensitivityVert;
+
 Event PlayerInput(Float DeltaTime) {
     if(myHUD != None && PickerHud(HUD).ToggleHUD) {
         if(FirstLaunchMousePos) {
@@ -33,7 +39,12 @@ Function SetCursorPos(Int Pos) {
 }
 
 Function InputCommand(String Text) {
-    PickerHud(HUD).Command = Text;
+    if(PickerHud(HUD).MathTasksHUD && MathTasksTimer) {
+        MathTasksAnswer = Text;
+    }
+    else {
+        PickerHud(HUD).Command = Text;
+    }
 }
 
 Function Bool Key(Int ControllerId, Name Key, EInputEvent Event, Float AmountDepressed=1.f, Bool bGamepad=false) {
@@ -256,7 +267,7 @@ Function Bool Char(Int ControllerId, String Unicode) {
     }
     else if(PickerHud(HUD).MathTasksHUD && MathTasksTimer) {
         if(Character >= 0x30 && Character < 0x3A && Unicode != "`" && Character != 0x7f) {
-            MathTasksAnswer = (Left(PickerHud(HUD).Command, CommandPos) $ Chr(Character)) $ Right(PickerHud(HUD).Command, Len(PickerHud(HUD).Command) - CommandPos);
+            InputCommand(MathTasksAnswer $ Unicode);
             SetCursorPos(CommandPos + 1);
         }
         return true;

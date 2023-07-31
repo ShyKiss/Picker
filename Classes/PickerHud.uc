@@ -408,7 +408,7 @@ Function PostRender() {
 /************************MENU FUNCTION************************/
 
 Event ShowPickerMenu() {
-    local Vector2D StartClip, EndClip;
+    local Vector2D StartClip, EndClip, Temp_Begin, Temp_End, TempTextSize, TempOffset;
     local PickerInput PlayerInput;
     local PickerController Controller;
     local PickerHero PickerPawn;
@@ -611,7 +611,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("UnlimitedBatteries") @ Controller.CheatManager.bUnlimitedBatteries, "ToggleUnlimitedBatteries",, true);
                 AddButton(ButtonLoc("Limp") @ PickerPawn.bLimping, "Limp",, true);
                 AddButton(ButtonLoc("Hobble") @ PickerPawn.bHobbling $ "/" $ PickerPawn.HobblingIntensity, "Hobble ",, true,,, !PickerPawn.bHobbling);
-                AddButton(ButtonLoc("ToggleThirdPerson") @ Controller.bThirdPersonMode, "ToggleThirdPerson" @ Controller.bThirdPersonMode,, true);
+                AddButton(ButtonLoc("ToggleThirdPerson") @ Controller.bThirdPersonMode, "ToggleThirdPerson" @  RussianBool(Controller.bThirdPersonMode),, true);
                 AddButton(ButtonLoc("Batteries") @ Controller.NumBatteries, "ChangeBatteries ",, true,,, true);
                 AddButton(ButtonLoc("FreeAnimations") @ Controller.bAnimFree, "AnimFree",, true);
                 AddButton(ButtonLoc("PlayerAnimationSpeed") @ Controller.fPlayerAnimRate, "PlayerAnimRate ",, true,,, true);
@@ -1080,6 +1080,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("Fixedcam") @ Controller.bDebugFixedCam, "ToggleFixedcam", Vect2D(285, 165),, StartClip, EndClip);
                 AddButton(ButtonLoc("Freecam") @ Controller.bDebugFreeCam, "ToggleFreecam",, true);
                 AddButton(ButtonLoc("HideHud") @ bCinematicMode, "ToggleCinematicMode",, true);
+                AddButton(ButtonLoc("HideCameraHud") @ Controller.bCameraHudVisible, "ToggleCameraHud" @ RussianBool(Controller.bCameraHudVisible),, true);
                 AddButton(ButtonLoc("FreecamSpeed") @ Controller.fDebugSpeed, "FreecamSpeed ",, true,,, true);
                 AddButton(ButtonLoc("DisableGrain") @ Controller.bGrainDisabled, "ToggleGrain",, true);
                 AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
@@ -1098,12 +1099,62 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("GoBack"), "SetMenu Normal NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
             case SettingsColor:
-                AddButton(ButtonLoc("ConsoleTextColorRed") @ ConsoleTextColor.Red, "ChangeColorTheme ConsoleTextColor R", Vect2D(285, 165),, StartClip, EndClip);
-                AddButton(ButtonLoc("ConsoleTextColorGreen") @ ConsoleTextColor.Green, "ChangeColorTheme ConsoleTextColor G",, true);
-                AddButton(ButtonLoc("ConsoleTextColorBlue") @ ConsoleTextColor.Blue, "ChangeColorTheme ConsoleTextColor B",, true);
-                AddButton(ButtonLoc("ConsoleTextColorAlpha") @ ConsoleTextColor.Alpha, "ChangeColorTheme ConsoleTextColor A",, true);
+                AddStringWithButtons(ButtonLoc("ConsoleTextColor"), Vect2D(285, 165),, StartClip, EndClip);
+                AddStringWithButtons(ButtonLoc("ConsoleColor"),, true);
+                AddStringWithButtons(ButtonLoc("PromptTextColor"),, true);
+                AddStringWithButtons(ButtonLoc("BackgroundColor"),, true);
+                AddStringWithButtons(ButtonLoc("ButtonTextColor"),, true);
+                AddStringWithButtons(ButtonLoc("ButtonColor"),, true);
+                AddStringWithButtons(ButtonLoc("ReturnButtonColor"),, true);
+                AddStringWithButtons(ButtonLoc("RangeButtonTextColor"),, true);
+                AddStringWithButtons(ButtonLoc("RangeButtonColor"),, true);
+                AddStringWithButtons(ButtonLoc("RangeReturnButtonColor"),, true);
+                //DrawString(ButtonLoc("ConsoleTextColor"), Vect2D(350 / 1280.0f * Canvas.SizeX, 175 /720.0f * Canvas.SizeY), MakeRGBA(ButtonTextColor.Red,ButtonTextColor.Green,ButtonTextColor.Blue,ButtonTextColor.Alpha), Vect2D(1.8, 1.8), false, true);
+                AddButton(String(ConsoleTextColor.Red), "ChangeColorTheme ConsoleTextColor R",, true,,,,,,,,true);
+                AddButton(String(ConsoleColor.Red), "ChangeColorTheme ConsoleColor R",, true);
+                AddButton(String(PromptTextColor.Red), "ChangeColorTheme PromptTextColor R",, true);
+                AddButton(String(BackgroundColor.Red), "ChangeColorTheme BackgroundColor R",, true);
+                AddButton(String(ButtonTextColor.Red), "ChangeColorTheme ButtonTextColor R",, true);
+                AddButton(String(ButtonColor.Red), "ChangeColorTheme ButtonColor R",, true);
+                AddButton(String(ReturnButtonColor.Red), "ChangeColorTheme ReturnButtonColor R",, true);
+                AddButton(String(RangeButtonTextColor.Red), "ChangeColorTheme RangeButtonTextColor R",, true);
+                AddButton(String(RangeButtonColor.Red), "ChangeColorTheme RangeButtonColor R",, true);
+                AddButton(String(RangeReturnButtonColor.Red), "ChangeColorTheme RangeReturnButtonColor R",, true);
 
-                AddButton(ButtonLoc("ConsoleColorRed") @ ConsoleColor.Red, "ChangeColorTheme ConsoleColor R",, true);
+                AddButton(String(ConsoleTextColor.Green), "ChangeColorTheme ConsoleTextColor G",, true,,,,,,,,true);
+                AddButton(String(ConsoleColor.Green), "ChangeColorTheme ConsoleColor G",, true);
+                AddButton(String(PromptTextColor.Green), "ChangeColorTheme PromptTextColor G",, true);
+                AddButton(String(BackgroundColor.Green), "ChangeColorTheme BackgroundColor G",, true);
+                AddButton(String(ButtonTextColor.Green), "ChangeColorTheme ButtonTextColor G",, true);
+                AddButton(String(ButtonColor.Green), "ChangeColorTheme ButtonColor G",, true);
+                AddButton(String(ReturnButtonColor.Green), "ChangeColorTheme ReturnButtonColor G",, true);
+                AddButton(String(RangeButtonTextColor.Green), "ChangeColorTheme RangeButtonTextColor G",, true);
+                AddButton(String(RangeButtonColor.Green), "ChangeColorTheme RangeButtonColor G",, true);
+                AddButton(String(RangeReturnButtonColor.Green), "ChangeColorTheme RangeReturnButtonColor G",, true);
+
+                AddButton(String(ConsoleTextColor.Blue), "ChangeColorTheme ConsoleTextColor B",, true,,,,,,,,true);
+                AddButton(String(ConsoleColor.Blue), "ChangeColorTheme ConsoleColor B",, true);
+                AddButton(String(PromptTextColor.Blue), "ChangeColorTheme PromptTextColor B",, true);
+                AddButton(String(BackgroundColor.Blue), "ChangeColorTheme BackgroundColor B",, true);
+                AddButton(String(ButtonTextColor.Blue), "ChangeColorTheme ButtonTextColor B",, true);
+                AddButton(String(ButtonColor.Blue), "ChangeColorTheme ButtonColor B",, true);
+                AddButton(String(ReturnButtonColor.Blue), "ChangeColorTheme ReturnButtonColor B",, true);
+                AddButton(String(RangeButtonTextColor.Blue), "ChangeColorTheme RangeButtonTextColor B",, true);
+                AddButton(String(RangeButtonColor.Blue), "ChangeColorTheme RangeButtonColor B",, true);
+                AddButton(String(RangeReturnButtonColor.Blue), "ChangeColorTheme RangeReturnButtonColor B",, true);
+
+                AddButton(String(ConsoleTextColor.Alpha), "ChangeColorTheme ConsoleTextColor A",, true,,,,,,,,true);
+                AddButton(String(ConsoleColor.Alpha), "ChangeColorTheme ConsoleColor A",, true);
+                AddButton(String(PromptTextColor.Alpha), "ChangeColorTheme PromptTextColor A",, true);
+                AddButton(String(BackgroundColor.Alpha), "ChangeColorTheme BackgroundColor A",, true);
+                AddButton(String(ButtonTextColor.Alpha), "ChangeColorTheme ButtonTextColor A",, true);
+                AddButton(String(ButtonColor.Alpha), "ChangeColorTheme ButtonColor A",, true);
+                AddButton(String(ReturnButtonColor.Alpha), "ChangeColorTheme ReturnButtonColor A",, true);
+                AddButton(String(RangeButtonTextColor.Alpha), "ChangeColorTheme RangeButtonTextColor A",, true);
+                AddButton(String(RangeButtonColor.Alpha), "ChangeColorTheme RangeButtonColor A",, true);
+                AddButton(String(RangeReturnButtonColor.Alpha), "ChangeColorTheme RangeReturnButtonColor A",, true);
+
+                /*AddButton(ButtonLoc("ConsoleColorRed") @ ConsoleColor.Red, "ChangeColorTheme ConsoleColor R",, true);
                 AddButton(ButtonLoc("ConsoleColorGreen") @ ConsoleColor.Green, "ChangeColorTheme ConsoleColor G",, true);
                 AddButton(ButtonLoc("ConsoleColorBlue") @ ConsoleColor.Blue, "ChangeColorTheme ConsoleColor B",, true);
                 AddButton(ButtonLoc("ConsoleColorAlpha") @ ConsoleColor.Alpha, "ChangeColorTheme ConsoleColor A",, true);
@@ -1151,7 +1202,7 @@ Event ShowPickerMenu() {
                 AddButton(ButtonLoc("RangeReturnButtonColorRed") @ RangeReturnButtonColor.Red, "ChangeColorTheme RangeReturnButtonColor R",, true);
                 AddButton(ButtonLoc("RangeReturnButtonColorGreen") @ RangeReturnButtonColor.Green, "ChangeColorTheme RangeReturnButtonColor G",, true);
                 AddButton(ButtonLoc("RangeReturnButtonColorBlue") @ RangeReturnButtonColor.Blue, "ChangeColorTheme RangeReturnButtonColor B",, true);
-                AddButton(ButtonLoc("RangeReturnButtonColorAlpha") @ RangeReturnButtonColor.Alpha, "ChangeColorTheme RangeReturnButtonColor A",, true);
+                AddButton(ButtonLoc("RangeReturnButtonColorAlpha") @ RangeReturnButtonColor.Alpha, "ChangeColorTheme RangeReturnButtonColor A",, true);*/
 
                 AddButton(ButtonLoc("GoBack"), "SetMenu Settings NothingFuncs", Vect2D(945, 620), false,,,,, MakeRGBA(ReturnButtonColor.Red, ReturnButtonColor.Green, ReturnButtonColor.Blue, ReturnButtonColor.Alpha), MakeRGBA(RangeReturnButtonColor.Red, RangeReturnButtonColor.Green, RangeReturnButtonColor.Blue, RangeReturnButtonColor.Alpha), MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha));
                 break;
@@ -1549,6 +1600,73 @@ Exec Function SetMenu(Menu Menu, optional String ButtonTag) {
     ButtonDesc=ButtonTag;
 }
 
+Function AddStringWithButtons(
+            String Name,
+            optional Vector2D Location,
+            optional Bool AutoDown=false,
+            optional Vector2D Bound_Start,
+            optional Vector2D Bound_End,
+            optional String buttontag,
+            optional RGBA StringColor=MakeRGBA(RangeButtonTextColor.Red,RangeButtonTextColor.Green,RangeButtonTextColor.Blue,RangeButtonTextColor.Alpha),
+            optional Bool InRow=false
+    ) {
+    local Vector2D Begin_PointCalc, End_PointCalc, Offset, Center_Vector, TextSize;
+    local ButtonStr ButtonBase, PreviousButton, FirstButtonInRow, ButtonInColumn;
+    local int Row, Column;
+
+    Canvas.TextSize(Name, TextSize.X, TextSize.Y);
+    if(TextSize.X > 70) {
+        Offset = Vect2D(3 + TextSize.X, TextSize.Y+1);
+    }
+    else {
+        Offset = Vect2D(70, TextSize.Y+1);
+    }
+    if(Buttons.Length == 0) {
+        Row = 1;
+        Column = 1;
+    }
+    else {
+        PreviousButton = Buttons[(Buttons.Length - 1)];
+        Row = PreviousButton.Row;
+        Column = PreviousButton.Column+1;
+        FirstButtonInRow = FindButton(Buttons, Row, 1);
+        if(FirstButtonInRow.Row!=-1) {
+            Bound_Start = FirstButtonInRow.ClipStart;
+            Bound_End = FirstButtonInRow.ClipEnd;
+            if(AutoDown) {
+                Location.X = PreviousButton.Location.X;
+                Location.Y = (PreviousButton.Location.Y + PreviousButton.Offset.Y) + 5;
+                if(!InRange(Scale2dVector(Location + Offset).Y, Bound_Start.Y, Bound_Start.Y + Bound_End.Y) || InRow) {
+                    Location.X = (FirstButtonInRow.Location.X + FirstButtonInRow.Offset.X) + 5;
+                    Location.Y = FirstButtonInRow.Location.Y;
+                    ++ Row;
+                    Column = 1;
+                }
+                else if (Column>1) {
+                    ButtonInColumn=FindButton(Buttons, (Row - 1), Column);
+                    if(ButtonInColumn.Row != -1) {
+                        Location.X = (ButtonInColumn.Location.X + ButtonInColumn.Offset.X) + 5;
+                    }
+                }
+            }
+        }
+    }
+    StringColor = MakeRGBA(ButtonTextColor.Red, ButtonTextColor.Green, ButtonTextColor.Blue, ButtonTextColor.Alpha);
+    DrawBox(Location, Offset, MakeRGBA(0,0,0,0), Begin_PointCalc, End_PointCalc);
+    Center_Vector = Vect2D((Begin_PointCalc.X + (Begin_PointCalc.X + End_PointCalc.X)) / 2, (Begin_PointCalc.Y + (Begin_PointCalc.Y + End_PointCalc.Y)) / 2);
+    DrawString(Name, Center_Vector, StringColor, Vect2D(1.8, 1.8), false, true);
+    ButtonBase.Name = Name;
+    ButtonBase.Start_Points = Begin_PointCalc;
+    ButtonBase.End_Point = Vect2D((Begin_PointCalc.X + End_PointCalc.X), (Begin_PointCalc.Y + End_PointCalc.Y));
+    ButtonBase.Location = Location;
+    ButtonBase.Offset = Offset;
+    ButtonBase.ClipStart = Bound_Start;
+    ButtonBase.ClipEnd = Bound_End;
+    ButtonBase.Row = Row;
+    ButtonBase.Column = Column;
+    Buttons.AddItem(ButtonBase);
+}
+
 Function AddButton(
             String Name,
             String ConsoleCommand,
@@ -1560,8 +1678,9 @@ Function AddButton(
             optional String buttontag,
             optional RGBA Color=MakeRGBA(ButtonColor.Red,ButtonColor.Green,ButtonColor.Blue,ButtonColor.Alpha),
             optional RGBA RangeColor=MakeRGBA(RangeButtonColor.Red,RangeButtonColor.Green,RangeButtonColor.Blue,RangeButtonColor.Alpha),
-            optional RGBA StringColor=MakeRGBA(RangeButtonTextColor.Red,RangeButtonTextColor.Green,RangeButtonTextColor.Blue,RangeButtonTextColor.Alpha)
-) {
+            optional RGBA StringColor=MakeRGBA(RangeButtonTextColor.Red,RangeButtonTextColor.Green,RangeButtonTextColor.Blue,RangeButtonTextColor.Alpha),
+            optional Bool InRow=false
+    ) {
     local Vector2D Begin_PointCalc, End_PointCalc, Offset, Center_Vector, TextSize;
     local RGBA ButColor;
     local ButtonStr ButtonBase, PreviousButton, FirstButtonInRow, ButtonInColumn;
@@ -1589,11 +1708,11 @@ Function AddButton(
             if(AutoDown) {
                 Location.X = PreviousButton.Location.X;
                 Location.Y = (PreviousButton.Location.Y + PreviousButton.Offset.Y) + 5;
-                if(!InRange(Scale2dVector(Location + Offset).Y, Bound_Start.Y, Bound_Start.Y + Bound_End.Y)) {
+                if(!InRange(Scale2dVector(Location + Offset).Y, Bound_Start.Y, Bound_Start.Y + Bound_End.Y) || InRow) {
                     Location.X = (FirstButtonInRow.Location.X + FirstButtonInRow.Offset.X) + 5;
                     Location.Y = FirstButtonInRow.Location.Y;
                     ++ Row;
-                    Column = 1;
+                     Column = 1;
                 }
                 else if (Column>1) {
                     ButtonInColumn=FindButton(Buttons, (Row - 1), Column);
